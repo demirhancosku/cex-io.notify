@@ -38,9 +38,6 @@ function init(client,bot){
                     }
                 }
             });
-        });
-
-        client.api.convert(amount = 1,couple = 'ETH/USD',function(param){
             db.query('SELECT * FROM buy_targets', function(err, rows) {
 
                 if(rows.length > 0){

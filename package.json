@@ -1,0 +1,17 @@
+{
+  "name": "cex-io.notify",
+  "version": "0.0.1",
+  "description": "",
+  "author": "Coşku Demirhan <cosku@dokuziki.com>",
+  "contributors": [
+    {
+      "name": "Eren Yıldırım",
+      "email": "mail@erenyildirim.com"
+    }
+  ],
+  "dependencies": {
+    "dblite": "^0.7.8",
+    "node-telegram-bot-api": "^0.27.1",
+    "sqlite": "^2.8.0"
+  }
+}

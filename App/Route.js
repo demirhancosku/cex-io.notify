@@ -37,8 +37,18 @@ function init() {
                     if(resp[1] === undefined || parseInt(resp[1]) < 200){
                         bot.sendMessage(chatId, 'Dude if you want to follow the ethereum rate, you have to give me a real number.');
                     }else{
-                        target.register(chatId,msg.from.id,msg.from.username,parseInt(resp[1]),function(rows){
+                        target.register(chatId,msg.from.id,msg.from.username,parseInt(resp[1]),'SELL',function(rows){
                             bot.sendMessage(chatId,'Ok! \nI will send you a message when ethereum rate reach ' + parseInt(resp[1]) + '$');
+                        });
+                    }
+
+                    break;
+                case 'buylimit':
+                    if(resp[1] === undefined || parseInt(resp[1]) < 200){
+                        bot.sendMessage(chatId, 'Dude if you don\'t give me a real number, how am I supposed to know what value to follow?');
+                    }else{
+                        target.register(chatId,msg.from.id,msg.from.username,parseInt(resp[1]),'BUY',function(rows){
+                            bot.sendMessage(chatId,'Ok! \nI will send you a message when ethereum rate falls below ' + parseInt(resp[1]) + '$');
                         });
                     }
 

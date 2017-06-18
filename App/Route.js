@@ -11,12 +11,58 @@ const bot = new TelegramBot(token, {polling: true});
 
 var client = require('./Client.js');
 var target = require('./TargetControl.js');
+var sendedCounts = {
+    'buy' : [],
+    'sell' : []
+}
+
+function messageLimit(channel,chatid) {
+    var found = false;
+    for (i in sendedCounts[channel]) {
+        if (sendedCounts[channel][i].id == chatid) {
+            found = i;
+            break;
+        }
+    }
+
+    if(!found){
+        found = sendedCounts[channel].length;
+        sendedCounts[channel][sendedCounts[channel].length] = {
+            id:chatid,
+            count:0
+        };
+    }
 
 
+    var will = {
+        id:chatid,
+        count:sendedCounts[channel][found].count + 1
+    };
+
+    sendedCounts[channel][found] = will;
+
+    if(sendedCounts[channel][found].count>9){
+        return false;
+    }else{
+        return true;
+    }
+}
+
+
+function messageLimitReset(channel,chatid) {
+    for (i in sendedCounts[channel]) {
+        if (sendedCounts[channel][i].id == chatid) {
+            sendedCounts[channel][i] = {
+                id:chatid,
+                    count:0
+            }
+            break;
+        }
+    }
+}
 function init() {
 
     bot.onText(/\/(.+)/, function(msg, match)  {
-        console.log(msg);
         if(config.persons.indexOf(msg.from.id) > -1 || config.chats.indexOf(msg.chat.id) > -1){
             //the message is trusted
 
@@ -26,8 +72,6 @@ function init() {
 
             switch(resp[0]) {
                 case 'account':
-
-                    bot.sendMessage(chatId, 'de');
                     client.api.balance(function(param){
                         bot.sendMessage(chatId,'Hey! \nYou have ' + param.ETH.available + ' Ethereum and \n'+ param.USD.available  +'$ in your account.  💣\n💵💰💵');
                     });
@@ -38,17 +82,18 @@ function init() {
                         bot.sendMessage(chatId, 'Dude if you want to follow the ethereum rate, you have to give me a real number.');
                     }else{
                         target.register(chatId,msg.from.id,msg.from.username,parseInt(resp[1]),'SELL',function(rows){
-                            bot.sendMessage(chatId,'Ok! \nI will send you a message when ethereum rate reach ' + parseInt(resp[1]) + '$');
+                            if(messageLimit('sell',chatId,+1))
+                                bot.sendMessage(chatId,'Ok! \nI will send you a message when ethereum rate reach ' + parseInt(resp[1]) + '$');
                         });
                     }
 
                     break;
                 case 'buylimit':
-                    if(resp[1] === undefined || parseInt(resp[1]) < 200){
+                    if(resp[1] === undefined || parseInt(resp[1]) > 500){
                         bot.sendMessage(chatId, 'Dude if you don\'t give me a real number, how am I supposed to know what value to follow?');
                     }else{
                         target.register(chatId,msg.from.id,msg.from.username,parseInt(resp[1]),'BUY',function(rows){
-                            bot.sendMessage(chatId,'Ok! \nI will send you a message when ethereum rate falls below ' + parseInt(resp[1]) + '$');
+                                bot.sendMessage(chatId,'Ok! \nI will send you a message when ethereum rate falls below ' + parseInt(resp[1]) + '$');
                         });
                     }
 
@@ -64,6 +109,8 @@ function init() {
                 case 'ok':
 
                     target.remove(msg.from.id,function(param){
+                        messageLimitReset('buy',chatId);
+                        messageLimitReset('sell',chatId);
                         bot.sendMessage(chatId,'Ok \nI leave you alone.😞');
                         bot.sendMessage(chatId,'🖕');
                     });
@@ -87,5 +134,6 @@ function init() {
 
 module.exports = {
     init:init,
+    messageLimit:messageLimit,
     bot:bot
 };

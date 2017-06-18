@@ -22,7 +22,7 @@ function remove(agent,callback){
     callback({agent:agent});
 }
 
-function init(client,bot){
+function init(client,bot,messageLimit){
     setInterval(function () {
 
         client.api.convert(amount = 1,couple = 'ETH/USD',function(param){
@@ -32,7 +32,7 @@ function init(client,bot){
                     for(i in rows){
                         var target = parseInt(rows[i][4]);
 
-                        if(param.amnt >=target){
+                        if(param.amnt >=target && messageLimit('sell',rows[i][1],+1)){
                             bot.sendMessage(rows[i][1],'Dude 💣 @'+rows[i][3]+' \nYou\'re too close to being rich. 💵💰💵💰💵💰💵 \nETH/USD:'+ param.amnt);
                         }
                     }
@@ -44,7 +44,7 @@ function init(client,bot){
                     for(i in rows){
                         var target = parseInt(rows[i][4]);
 
-                        if(param.amnt <=target){
+                        if(param.amnt <=target && messageLimit('buy',rows[i][1],+1)){
                             bot.sendMessage(rows[i][1],'Dude 💣 @'+rows[i][3]+' \nIt\'s time to buy! Quick!! 💵💰💵💰💵💰💵 \nETH/USD:'+ param.amnt);
                         }
                     }

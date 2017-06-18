@@ -10,7 +10,7 @@ var client = require('./App/Client.js');
 var target = require('./App/TargetControl.js');
 
 router.init(client);
-target.init(client,router.bot);
+target.init(client,router.bot,router.messageLimit);
 
 /*
 app.use(bodyParser.urlencoded({ extended: true }));

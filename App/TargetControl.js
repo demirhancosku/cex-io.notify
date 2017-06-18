@@ -4,16 +4,21 @@
 var db = require('./Db.js');
 
 
-
-function register(chatid,agent,mention,value,callback){
-    db.query("DELETE FROM targets WHERE agent = '@agent'", {agent:agent});
-
-    db.query("INSERT INTO targets VALUES(null,'@chatid','@agent',@mention, '@value')", {chatid:chatid, agent: agent, mention: mention, value:value});
+//limit is either 'SELL' or 'BUY' depending on what you want to follow
+function register(chatid,agent,mention,value,limit,callback){
+    if(limit == 'BUY'){
+        db.query("DELETE FROM buy_targets WHERE agent = '@agent'", {agent:agent});
+        db.query("INSERT INTO buy_targets VALUES(null,'@chatid','@agent',@mention, '@value')", {chatid:chatid, agent: agent, mention: mention, value:value});
+    } else {
+        db.query("DELETE FROM targets WHERE agent = '@agent'", {agent:agent});
+        db.query("INSERT INTO targets VALUES(null,'@chatid','@agent',@mention, '@value')", {chatid:chatid, agent: agent, mention: mention, value:value});
+    }
     callback({agent:agent,value:value});
 }
 
 function remove(agent,callback){
     db.query("DELETE FROM targets WHERE agent = '@agent'", {agent:agent});
+    db.query("DELETE FROM buy_targets WHERE agent = '@agent'", {agent:agent});
     callback({agent:agent});
 }
 
@@ -24,13 +29,25 @@ function init(client,bot){
             db.query('SELECT * FROM targets', function(err, rows) {
 
                 if(rows.length > 0){
-                   for(i in rows){
-                       var target = parseInt(rows[i][4]);
+                    for(i in rows){
+                        var target = parseInt(rows[i][4]);
 
-                       if(param.amnt >=target){
-                           bot.sendMessage(rows[i][1],'Dude 💣 @'+rows[i][3]+' \nYou\'re too close to being rich. 💵💰💵💰💵💰💵 \nETH/USD:'+ param.amnt);
-                       }
-                   }
+                        if(param.amnt >=target){
+                            bot.sendMessage(rows[i][1],'Dude 💣 @'+rows[i][3]+' \nYou\'re too close to being rich. 💵💰💵💰💵💰💵 \nETH/USD:'+ param.amnt);
+                        }
+                    }
+                }
+            });
+            db.query('SELECT * FROM buy_targets', function(err, rows) {
+
+                if(rows.length > 0){
+                    for(i in rows){
+                        var target = parseInt(rows[i][4]);
+
+                        if(param.amnt <=target){
+                            bot.sendMessage(rows[i][1],'Dude 💣 @'+rows[i][3]+' \nIt\'s time to buy! Quick!! 💵💰💵💰💵💰💵 \nETH/USD:'+ param.amnt);
+                        }
+                    }
                 }
             });
         });

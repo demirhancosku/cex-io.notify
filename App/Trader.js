@@ -6,18 +6,19 @@ var timeseries = require("timeseries-analysis");
 var fs = require('fs');
 
 
-var forcastCount = 70;
+var forcastCount = 200;
 var buyProfitMargin = 0.1;
 var sellProfitMargin = 0.1;
 
 var debug = true;
 var bot = {};
+var resourcesConatiner = [];
 
 var forcast = function (resources) {
-    db.query('SELECT * FROM prices ORDER BY id DESC LIMIT 300', function (err, rows) {
+    db.query('SELECT * FROM prices ORDER BY id DESC LIMIT 720', function (err, rows) {
 
 
-        if (rows.length > 299) {
+        if (rows.length > 719) {
             var lastAskPrices = [], lastBidPrices = [];
 
             for (i in rows) {
@@ -26,9 +27,17 @@ var forcast = function (resources) {
             }
 
 
-            var tAsk = new timeseries.main(lastAskPrices.reverse()).smoother({period: 10});
+            var tAsk = new timeseries.main(lastAskPrices.reverse()).smoother({period: 10}).dsp_itrend({
+                alpha:   0.7
+            }).smoother({
+                period:     10
+            });
 
-            var tBid = new timeseries.main(lastBidPrices.reverse()).smoother({period: 10});
+            var tBid = new timeseries.main(lastBidPrices.reverse()).smoother({period: 10}).dsp_itrend({
+                alpha:   0.7
+            }).smoother({
+                period:     10
+            });
 
 
             var Askcoeffs = tAsk.ARMaxEntropy({
@@ -155,8 +164,8 @@ var init = function (client, chatBot) {
             if (err) {
                 console.log(err);
             } else {
-                var resources = JSON.parse(data);
-                forcast(resources);
+                resourcesConatiner = JSON.parse(data);
+                forcast(resourcesConatiner);
             }
         });
     }, 5000);
@@ -197,7 +206,7 @@ var buyKnow = function (resource, ask) {
                     resources[i].bid = null;
                 }
             }
-
+            resourcesConatiner = resources;
             fs.writeFile('resources.json', JSON.stringify(resources), 'utf8', function () {
                 db.query("INSERT INTO market_logs VALUES(null,@type,'@value','@amount',@date)", {
                     type: 'buy',
@@ -227,6 +236,7 @@ var sellKnow = function (resource, bid) {
                 }
             }
 
+            resourcesConatiner = resources;
             fs.writeFile('resources.json', JSON.stringify(resources), 'utf8', function () {
                 db.query("INSERT INTO market_logs VALUES(null,@type ,'@value','@amount',@date)", {
                     type: 'sell',

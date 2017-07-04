@@ -11,7 +11,7 @@ var trader = require('./App/Trader.js');
 
 router.init(client);
 target.init(client,router.bot,router.messageLimit);
-trader.init(client);
+trader.init(client,router.bot);
 /*
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());

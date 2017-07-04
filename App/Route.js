@@ -122,8 +122,14 @@ function init() {
                     bot.sendPhoto(chatId,'https://unsplash.it/600/600/?random');
 
                     break;
-                default:
 
+                case 'save':
+
+                   console.log(chatId,msg.from.id);
+
+                   break;
+
+                default:
 
             }
 

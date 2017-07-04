@@ -27,17 +27,9 @@ var forcast = function (resources) {
             }
 
 
-            var tAsk = new timeseries.main(lastAskPrices.reverse()).smoother({period: 10}).dsp_itrend({
-                alpha:   0.7
-            }).smoother({
-                period:     10
-            });
+            var tAsk = new timeseries.main(lastAskPrices.reverse());
 
-            var tBid = new timeseries.main(lastBidPrices.reverse()).smoother({period: 10}).dsp_itrend({
-                alpha:   0.7
-            }).smoother({
-                period:     10
-            });
+            var tBid = new timeseries.main(lastBidPrices.reverse());
 
 
             var Askcoeffs = tAsk.ARMaxEntropy({
@@ -78,7 +70,7 @@ var forcast = function (resources) {
                             if ((parseFloat(resource.bid) - parseFloat(buyProfitMargin)) < (parseFloat(lastAskPrices[lastAskPrices.length - 1][1]))) {
 
                                 suitableForAsk = true;
-                                buyKnow(resource, lastAskPrices[lastAskPrices.length - 1][1]);
+                                buyKnow(resource, lastAskPrices[lastAskPrices.length - 1][1],tAsk);
                             }
 
                         }
@@ -125,7 +117,7 @@ var forcast = function (resources) {
                             if ((parseFloat(resource.ask) + parseFloat(sellProfitMargin) ) < parseFloat(lastBidPrices[lastBidPrices.length - 1][1])) {
 
                                 suitableForBid = true;
-                                sellKnow(resource, lastBidPrices[lastBidPrices.length - 1][1]);
+                                sellKnow(resource, lastBidPrices[lastBidPrices.length - 1][1],tBid);
                             }
                         }
 
@@ -190,8 +182,11 @@ var init = function (client, chatBot) {
 
 }
 
-var buyKnow = function (resource, ask) {
+var buyKnow = function (resource, ask,t) {
     bot.sendMessage(22353916, ask + '$ değerinde ' + resource.amount + ' ETH Satın Aldım');
+
+    var chart_url = t.ma({period: 96}).chart();
+    bot.sendMessage(22353916,'Son grafik: '+ chart_url);
 
 
     fs.readFile('resources.json', 'utf8', function readFileCallback(err, data) {
@@ -220,8 +215,12 @@ var buyKnow = function (resource, ask) {
 
 }
 
-var sellKnow = function (resource, bid) {
+var sellKnow = function (resource, bid,t) {
     bot.sendMessage(22353916, bid + '$ değerinde ' + resource.amount + ' ETH Sattım');
+
+    var chart_url = t.ma({period: 96}).chart();
+    bot.sendMessage(22353916,'Son grafik: '+ chart_url);
+
 
     fs.readFile('resources.json', 'utf8', function readFileCallback(err, data) {
         if (err) {

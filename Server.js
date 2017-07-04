@@ -4,14 +4,14 @@
 
 
 var router = require("./App/Route.js");
-var bodyParser = require('body-parser');
 
 var client = require('./App/Client.js');
 var target = require('./App/TargetControl.js');
+var trader = require('./App/Trader.js');
 
 router.init(client);
 target.init(client,router.bot,router.messageLimit);
-
+trader.init(client);
 /*
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());

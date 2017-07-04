@@ -25,15 +25,15 @@ function remove(agent,callback){
 function init(client,bot,messageLimit){
     setInterval(function () {
 
-        client.api.convert(amount = 1,couple = 'ETH/USD',function(param){
+        client.api.ticker(couple = 'ETH/USD',function(param){
             db.query('SELECT * FROM targets', function(err, rows) {
 
                 if(rows.length > 0){
                     for(i in rows){
                         var target = parseInt(rows[i][4]);
 
-                        if(param.amnt >=target && messageLimit('sell',rows[i][1],+1)){
-                            bot.sendMessage(rows[i][1],'Dude 💣 @'+rows[i][3]+' \nYou\'re too close to being rich. 💵💰💵💰💵💰💵 \nETH/USD:'+ param.amnt);
+                        if(param.bid >=target && messageLimit('sell',rows[i][1],+1)){
+                            bot.sendMessage(rows[i][1],'Dude 💣 @'+rows[i][3]+' \nYou\'re too close to being rich. 💵💰💵💰💵💰💵 \nETH/USD:'+ param.bid);
                         }
                     }
                 }
@@ -44,13 +44,17 @@ function init(client,bot,messageLimit){
                     for(i in rows){
                         var target = parseInt(rows[i][4]);
 
-                        if(param.amnt <=target && messageLimit('buy',rows[i][1],+1)){
-                            bot.sendMessage(rows[i][1],'Dude 💣 @'+rows[i][3]+' \nIt\'s time to buy! Quick!! 💵💰💵💰💵💰💵 \nETH/USD:'+ param.amnt);
+                        if(param.ask <=target && messageLimit('buy',rows[i][1],+1)){
+                            bot.sendMessage(rows[i][1],'Dude 💣 @'+rows[i][3]+' \nIt\'s time to buy! Quick!! 💵💰💵💰💵💰💵 \nETH/USD:'+ param.ask);
                         }
                     }
                 }
             });
+
+            db.query("INSERT INTO prices VALUES(null,'@ask','@bid',@date)", {ask:param.ask, bid: param.bid, date: param.timestamp});
+
         });
+
 
     },5000)
 }

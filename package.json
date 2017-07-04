@@ -12,6 +12,7 @@
   "dependencies": {
     "dblite": "^0.7.8",
     "node-telegram-bot-api": "^0.27.1",
+    "prompt": "^1.0.0",
     "sqlite": "^2.8.0"
   }
 }

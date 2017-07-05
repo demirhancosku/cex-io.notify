@@ -6,24 +6,23 @@ var timeseries = require("timeseries-analysis");
 var fs = require('fs');
 
 
-var forcastCount = 200;
+var forecastCount = 10;
 var buyProfitMargin = 0.1;
 var sellProfitMargin = 0.1;
 
-var debug = true;
+var debug = true;//TODO: Take this to the config file
 var bot = {};
 var resourcesConatiner = [];
 
-var forcast = function (resources) {
+var forecast = function (resources) {
     db.query('SELECT * FROM prices ORDER BY id DESC LIMIT 720', function (err, rows) {
 
-
-        if (rows.length > 719) {
+        if (rows.length > 25) {
             var lastAskPrices = [], lastBidPrices = [];
 
             for (i in rows) {
-                lastAskPrices.push([new Date(rows[i][3] * 1000), parseFloat(rows[i][1])]);
-                lastBidPrices.push([new Date(rows[i][3] * 1000), parseFloat(rows[i][2])]);
+                lastAskPrices.push([new Date(rows[i].timestamp * 1000), parseFloat(rows[i].ask)]);
+                lastBidPrices.push([new Date(rows[i].timestamp * 1000), parseFloat(rows[i].bid)]);
             }
 
 
@@ -33,22 +32,21 @@ var forcast = function (resources) {
 
 
             var Askcoeffs = tAsk.ARMaxEntropy({
-                data: tAsk.data.slice(tAsk.data.length - forcastCount)
+                data: tAsk.data.slice(tAsk.data.length - forecastCount)
             });
 
             var Bidcoeffs = tBid.ARMaxEntropy({
-                data: tBid.data.slice(tBid.data.length - forcastCount)
+                data: tBid.data.slice(tBid.data.length - forecastCount)
             });
 
 
             var askForecast = 0;
             for (var i = 0; i < Askcoeffs.length; i++) {
-                askForecast -= tAsk.data[forcastCount - i][1] * Askcoeffs[i];
+                askForecast -= tAsk.data[forecastCount - i][1] * Askcoeffs[i];
             }
-
             var bidForecast = 0;
             for (var i = 0; i < Bidcoeffs.length; i++) {
-                bidForecast -= tBid.data[forcastCount - i][1] * Bidcoeffs[i];
+                bidForecast -= tBid.data[forecastCount - i][1] * Bidcoeffs[i];
             }
 
             if (debug) {
@@ -157,7 +155,7 @@ var init = function (client, chatBot) {
                 console.log(err);
             } else {
                 resourcesConatiner = JSON.parse(data);
-                forcast(resourcesConatiner);
+                forecast(resourcesConatiner);
             }
         });
     }, 5000);
@@ -168,10 +166,10 @@ var init = function (client, chatBot) {
 
         for (i in rows) {
 
-            if (rows[i][1] === 'buy') {
-                total -= rows[i][2] * rows[i][3];
+            if (rows[i].type === 'buy') {
+                total -= rows[i].value * rows[i].amount;
             } else {
-                total += rows[i][2] * rows[i][3];
+                total += rows[i].value * rows[i].amount;
             }
 
         }
@@ -203,7 +201,7 @@ var buyKnow = function (resource, ask,t) {
             }
             resourcesConatiner = resources;
             fs.writeFile('resources.json', JSON.stringify(resources), 'utf8', function () {
-                db.query("INSERT INTO market_logs VALUES(null,@type,'@value','@amount',@date)", {
+                db.query("INSERT INTO market_logs SET ?", {
                     type: 'buy',
                     value: ask,
                     amount: resource.amount,
@@ -237,7 +235,7 @@ var sellKnow = function (resource, bid,t) {
 
             resourcesConatiner = resources;
             fs.writeFile('resources.json', JSON.stringify(resources), 'utf8', function () {
-                db.query("INSERT INTO market_logs VALUES(null,@type ,'@value','@amount',@date)", {
+                db.query("INSERT INTO market_logs SET ?", {
                     type: 'sell',
                     value: bid,
                     amount: resource.amount,

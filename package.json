@@ -11,9 +11,11 @@
   ],
   "dependencies": {
     "dblite": "^0.7.8",
+    "forever": "^0.15.3",
     "node-telegram-bot-api": "^0.27.1",
     "prompt": "^1.0.0",
     "sqlite": "^2.8.0",
-    "timeseries-analysis":"1.0.12"
+    "timeseries-analysis": "1.0.12",
+    "mysql": "^2.13.0"
   }
 }

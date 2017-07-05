@@ -6,7 +6,7 @@ var timeseries = require("timeseries-analysis");
 var fs = require('fs');
 
 
-var forecastCount = 200;
+var forecastCount = 300;
 var buyProfitMargin = 0.1;
 var sellProfitMargin = 0.1;
 

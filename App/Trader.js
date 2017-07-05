@@ -6,7 +6,7 @@ var timeseries = require("timeseries-analysis");
 var fs = require('fs');
 
 
-var forecastCount = 10;
+var forecastCount = 200;
 var buyProfitMargin = 0.1;
 var sellProfitMargin = 0.1;
 
@@ -16,8 +16,7 @@ var resourcesConatiner = [];
 
 var forecast = function (resources) {
     db.query('SELECT * FROM prices ORDER BY id DESC LIMIT 720', function (err, rows) {
-
-        if (rows.length > 25) {
+        if (rows.length > 700) {
             var lastAskPrices = [], lastBidPrices = [];
 
             for (i in rows) {
@@ -26,17 +25,29 @@ var forecast = function (resources) {
             }
 
 
+
             var tAsk = new timeseries.main(lastAskPrices.reverse());
+            tAsk.dsp_itrend({
+                alpha: 0.1
+            }).save('smoothed');
+
 
             var tBid = new timeseries.main(lastBidPrices.reverse());
+            tBid.dsp_itrend({
+                alpha: 0.1
+            }).save('smoothed');
 
 
             var Askcoeffs = tAsk.ARMaxEntropy({
-                data: tAsk.data.slice(tAsk.data.length - forecastCount)
+                data: tAsk.data.slice(tAsk.data.length - forecastCount),
+                degree: 34,
+                sample: 46
             });
 
             var Bidcoeffs = tBid.ARMaxEntropy({
-                data: tBid.data.slice(tBid.data.length - forecastCount)
+                data: tBid.data.slice(tBid.data.length - forecastCount),
+                degree: 34,
+                sample: 46
             });
 
 
@@ -68,20 +79,13 @@ var forecast = function (resources) {
                             if ((parseFloat(resource.bid) - parseFloat(buyProfitMargin)) < (parseFloat(lastAskPrices[lastAskPrices.length - 1][1]))) {
 
                                 suitableForAsk = true;
-                                buyKnow(resource, lastAskPrices[lastAskPrices.length - 1][1],tAsk);
+                                buyKnow(resource, lastAskPrices[lastAskPrices.length - 1][1], tAsk);
                             }
 
                         }
 
                     }
 
-                    /*
-                     if ((parseFloat(resource.bid) + parseFloat(buyProfitMargin)) < (parseFloat(lastAskPrices[lastAskPrices.length - 1][1]))) {
-
-                     suitableForAsk = true;
-                     buyKnow(resource, lastAskPrices[lastAskPrices.length - 1][1]);
-                     }
-                     */
                     if (debug)
                         console.log(resource.bid + ' için alış istediğimiz değer: ' + (parseFloat(resource.bid) - parseFloat(buyProfitMargin)));
 
@@ -115,17 +119,11 @@ var forecast = function (resources) {
                             if ((parseFloat(resource.ask) + parseFloat(sellProfitMargin) ) < parseFloat(lastBidPrices[lastBidPrices.length - 1][1])) {
 
                                 suitableForBid = true;
-                                sellKnow(resource, lastBidPrices[lastBidPrices.length - 1][1],tBid);
+                                sellKnow(resource, lastBidPrices[lastBidPrices.length - 1][1], tBid);
                             }
                         }
 
                     }
-
-                    /*if ((parseFloat(resource.ask) + parseFloat(sellProfitMargin) ) < parseFloat(lastBidPrices[lastBidPrices.length - 1][1])) {
-
-                     suitableForBid = true;
-                     sellKnow(resource, lastBidPrices[lastBidPrices.length - 1][1]);
-                     }*/
 
                     if (debug) {
                         console.log(resource.ask + ' için satış istediğimiz değer: ' + ( parseFloat(resource.ask) + parseFloat(sellProfitMargin) ));
@@ -180,11 +178,11 @@ var init = function (client, chatBot) {
 
 }
 
-var buyKnow = function (resource, ask,t) {
+var buyKnow = function (resource, ask, t) {
     bot.sendMessage(22353916, ask + '$ değerinde ' + resource.amount + ' ETH Satın Aldım');
 
     var chart_url = t.ma({period: 96}).chart();
-    bot.sendMessage(22353916,'Son grafik: '+ chart_url);
+    bot.sendMessage(22353916, 'Son grafik: ' + chart_url);
 
 
     fs.readFile('resources.json', 'utf8', function readFileCallback(err, data) {
@@ -213,11 +211,11 @@ var buyKnow = function (resource, ask,t) {
 
 }
 
-var sellKnow = function (resource, bid,t) {
+var sellKnow = function (resource, bid, t) {
     bot.sendMessage(22353916, bid + '$ değerinde ' + resource.amount + ' ETH Sattım');
 
     var chart_url = t.ma({period: 96}).chart();
-    bot.sendMessage(22353916,'Son grafik: '+ chart_url);
+    bot.sendMessage(22353916, 'Son grafik: ' + chart_url);
 
 
     fs.readFile('resources.json', 'utf8', function readFileCallback(err, data) {

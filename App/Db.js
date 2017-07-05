@@ -2,11 +2,12 @@
  * Created by coskudemirhan on 17/06/2017.
  */
 var mysql      = require('mysql');
+var config      = require('../config.js');
 var connection = mysql.createConnection({
-    host     : 'ethereum.csoauholwq8f.eu-central-1.rds.amazonaws.com',
-    user     : 'eren',
-    password : 'NeverEren',
-    database : 'ether'
+    host     : config.dbhost,
+    user     : config.dbuser,
+    password : config.dbpass,
+    database : config.dbname
 });
 
 db = connection;

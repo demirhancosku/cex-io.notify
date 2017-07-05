@@ -9,6 +9,12 @@ config.api_key = '';
 config.api_secret = '';
 config.telegram_key = '';
 
+//DBConfig
+config.dbhost = '';
+config.dbuser = '';
+config.dbpass = '';
+config.dbname = '';
+
 config.persons = []; // trusted telegram ids
 config.chats = []; // trusted chat ids
 

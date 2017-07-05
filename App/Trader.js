@@ -6,7 +6,7 @@ var timeseries = require("timeseries-analysis");
 var fs = require('fs');
 
 
-var forecastCount = 200;
+var forecastCount = 120;
 var buyProfitMargin = 2;
 var sellProfitMargin = 1;
 
@@ -15,8 +15,8 @@ var bot = {};
 var resourcesConatiner = [];
 
 var forecast = function (resources) {
-    db.query('SELECT * FROM prices ORDER BY id DESC LIMIT 1500', function (err, rows) {
-        if (rows.length > 700) {
+    db.query('SELECT * FROM prices ORDER BY id DESC LIMIT 300', function (err, rows) {
+
             var lastAskPrices = [], lastBidPrices = [];
 
             for (i in rows) {
@@ -27,37 +27,40 @@ var forecast = function (resources) {
 
 
             var tAsk = new timeseries.main(lastAskPrices.reverse());
-            tAsk.dsp_itrend({
-                alpha: 0.1
+
+            var smoothedAsk = tAsk.smoother({period: 6}).dsp_itrend({
+                alpha: 0.9
             }).save('smoothed');
 
 
             var tBid = new timeseries.main(lastBidPrices.reverse());
-            tBid.dsp_itrend({
-                alpha: 0.1
+
+            var smoothedBid = tBid.smoother({period: 6}).dsp_itrend({
+                alpha: 0.9
             }).save('smoothed');
 
 
-            var Askcoeffs = tAsk.ARMaxEntropy({
+            var Askcoeffs = smoothedAsk.ARMaxEntropy({
                 data: tAsk.data.slice(tAsk.data.length - forecastCount),
-                degree: 34,
-                sample: 46
+                degree: 10,
+                sample: forecastCount
             });
 
-            var Bidcoeffs = tBid.ARMaxEntropy({
+            var Bidcoeffs = smoothedBid.ARMaxEntropy({
                 data: tBid.data.slice(tBid.data.length - forecastCount),
-                degree: 34,
-                sample: 46
+                degree: 10,
+                sample: forecastCount
             });
 
 
             var askForecast = 0;
             for (var i = 0; i < Askcoeffs.length; i++) {
-                askForecast -= tAsk.data[forecastCount - i][1] * Askcoeffs[i];
+                askForecast -= tAsk.data[tAsk.data.length - 1 - i][1] * Askcoeffs[i];
             }
+
             var bidForecast = 0;
-            for (var i = 0; i < Bidcoeffs.length; i++) {
-                bidForecast -= tBid.data[forecastCount - i][1] * Bidcoeffs[i];
+            for (var k = 0; k < Bidcoeffs.length; k++) {
+                bidForecast -= tBid.data[tBid.data.length - 1 - k][1] * Bidcoeffs[k];
             }
 
             if (debug) {
@@ -141,7 +144,7 @@ var forecast = function (resources) {
 
             }
 
-        }
+
 
     });
 }
@@ -184,7 +187,7 @@ var buyNow = function (resource, ask, t) {
     bot.sendMessage(22353916, ask + '$ değerinde ' + resource.amount + ' ETH Satın Aldım');
 
     var chart_url = t.chart();
-    bot.sendPhoto(chatId,chart_url);
+    bot.sendPhoto(22353916,chart_url);
 
 
     fs.readFile('resources.json', 'utf8', function readFileCallback(err, data) {
@@ -217,7 +220,7 @@ var sellNow = function (resource, bid, t) {
     bot.sendMessage(22353916, bid + '$ değerinde ' + resource.amount + ' ETH Sattım');
 
     var chart_url = t.chart();
-    bot.sendPhoto(chatId,chart_url);
+    bot.sendPhoto(22353916,chart_url);
 
 
     fs.readFile('resources.json', 'utf8', function readFileCallback(err, data) {

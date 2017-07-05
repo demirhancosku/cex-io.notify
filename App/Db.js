@@ -19,4 +19,6 @@ db.query('CREATE TABLE IF NOT EXISTS prices (id INTEGER PRIMARY KEY, ask float, 
 
 db.query('CREATE TABLE IF NOT EXISTS market_logs (id INTEGER PRIMARY KEY, type TEXT, value float, amount float, timestamp TEXT)');
 
+//db.query('CREATE TABLE IF NOT EXISTS forecasts_tests (id INTEGER PRIMARY KEY, ask float, bid float, timestamp TEXT)');
+
 module.exports = db;

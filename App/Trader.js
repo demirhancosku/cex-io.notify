@@ -6,7 +6,7 @@ var timeseries = require("timeseries-analysis");
 var fs = require('fs');
 
 
-var forecastCount = 300;
+var forecastCount = 500;
 var buyProfitMargin = 0.1;
 var sellProfitMargin = 0.1;
 
@@ -15,7 +15,7 @@ var bot = {};
 var resourcesConatiner = [];
 
 var forecast = function (resources) {
-    db.query('SELECT * FROM prices ORDER BY id DESC LIMIT 720', function (err, rows) {
+    db.query('SELECT * FROM prices ORDER BY id DESC LIMIT 1500', function (err, rows) {
         if (rows.length > 700) {
             var lastAskPrices = [], lastBidPrices = [];
 
@@ -79,7 +79,7 @@ var forecast = function (resources) {
                             if ((parseFloat(resource.bid) - parseFloat(buyProfitMargin)) < (parseFloat(lastAskPrices[lastAskPrices.length - 1][1]))) {
 
                                 suitableForAsk = true;
-                                buyKnow(resource, lastAskPrices[lastAskPrices.length - 1][1], tAsk);
+                                buyNow(resource, lastAskPrices[lastAskPrices.length - 1][1], tAsk);
                             }
 
                         }
@@ -119,7 +119,7 @@ var forecast = function (resources) {
                             if ((parseFloat(resource.ask) + parseFloat(sellProfitMargin) ) < parseFloat(lastBidPrices[lastBidPrices.length - 1][1])) {
 
                                 suitableForBid = true;
-                                sellKnow(resource, lastBidPrices[lastBidPrices.length - 1][1], tBid);
+                                sellNow(resource, lastBidPrices[lastBidPrices.length - 1][1], tBid);
                             }
                         }
 
@@ -178,7 +178,7 @@ var init = function (client, chatBot) {
 
 }
 
-var buyKnow = function (resource, ask, t) {
+var buyNow = function (resource, ask, t) {
     bot.sendMessage(22353916, ask + '$ değerinde ' + resource.amount + ' ETH Satın Aldım');
 
     var chart_url = t.ma({period: 96}).chart();
@@ -203,7 +203,7 @@ var buyKnow = function (resource, ask, t) {
                     type: 'buy',
                     value: ask,
                     amount: resource.amount,
-                    date: +new Date()
+                    timestamp: +new Date()
                 });
             });
         }
@@ -211,7 +211,7 @@ var buyKnow = function (resource, ask, t) {
 
 }
 
-var sellKnow = function (resource, bid, t) {
+var sellNow = function (resource, bid, t) {
     bot.sendMessage(22353916, bid + '$ değerinde ' + resource.amount + ' ETH Sattım');
 
     var chart_url = t.ma({period: 96}).chart();
@@ -237,7 +237,7 @@ var sellKnow = function (resource, bid, t) {
                     type: 'sell',
                     value: bid,
                     amount: resource.amount,
-                    date: +new Date()
+                    timestamp: +new Date()
                 });
             });
         }

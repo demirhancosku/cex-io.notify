@@ -79,7 +79,7 @@ var forecast = function (resources) {
                     if (parseFloat(lastAskPrices[lastAskPrices.length - 1][1]) < tAsk.mean()) {
                         if (parseFloat(askForecast) > parseFloat(lastAskPrices[lastAskPrices.length - 1][1])) {
 
-                            if ((parseFloat(resource.bid) - parseFloat(buyProfitMargin)) < (parseFloat(lastAskPrices[lastAskPrices.length - 1][1]))) {
+                            if ((parseFloat(resource.bid) - parseFloat(buyProfitMargin)) > (parseFloat(lastAskPrices[lastAskPrices.length - 1][1]))) {
 
                                 suitableForAsk = true;
                                 buyNow(resource, lastAskPrices[lastAskPrices.length - 1][1], tAsk);

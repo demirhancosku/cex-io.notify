@@ -6,9 +6,9 @@ var timeseries = require("timeseries-analysis");
 var fs = require('fs');
 
 
-var forecastCount = 500;
-var buyProfitMargin = 0.1;
-var sellProfitMargin = 0.1;
+var forecastCount = 200;
+var buyProfitMargin = 2;
+var sellProfitMargin = 1;
 
 var debug = true;//TODO: Take this to the config file
 var bot = {};
@@ -128,6 +128,8 @@ var forecast = function (resources) {
                     if (debug) {
                         console.log(resource.ask + ' için satış istediğimiz değer: ' + ( parseFloat(resource.ask) + parseFloat(sellProfitMargin) ));
                         console.log(resource.ask + ' ile aldığımız satış için uygun mu: ' + suitableForBid + '\n');
+
+
                     }
                 }
 
@@ -181,8 +183,8 @@ var init = function (client, chatBot) {
 var buyNow = function (resource, ask, t) {
     bot.sendMessage(22353916, ask + '$ değerinde ' + resource.amount + ' ETH Satın Aldım');
 
-    var chart_url = t.ma({period: 96}).chart();
-    bot.sendMessage(22353916, 'Son grafik: ' + chart_url);
+    var chart_url = t.chart();
+    bot.sendPhoto(chatId,chart_url);
 
 
     fs.readFile('resources.json', 'utf8', function readFileCallback(err, data) {
@@ -214,8 +216,8 @@ var buyNow = function (resource, ask, t) {
 var sellNow = function (resource, bid, t) {
     bot.sendMessage(22353916, bid + '$ değerinde ' + resource.amount + ' ETH Sattım');
 
-    var chart_url = t.ma({period: 96}).chart();
-    bot.sendMessage(22353916, 'Son grafik: ' + chart_url);
+    var chart_url = t.chart();
+    bot.sendPhoto(chatId,chart_url);
 
 
     fs.readFile('resources.json', 'utf8', function readFileCallback(err, data) {

@@ -100,7 +100,7 @@ var forecast = function () {
 
 
                     if (parseFloat(lastAskPrices[lastAskPrices.length - 1][1]) < tAsk.mean()) {
-                        if (parseFloat(askForecast) > parseFloat(lastAskPrices[lastAskPrices.length - 1][1])) {
+                        if ((parseFloat(askForecast) - parseFloat((resource.buy_margin * 0.1)))  > parseFloat(lastAskPrices[lastAskPrices.length - 1][1])) {
 
                             if ((parseFloat(resource.bid) - parseFloat(resource.buy_margin)) > (parseFloat(lastAskPrices[lastAskPrices.length - 1][1]))) {
 
@@ -130,13 +130,13 @@ var forecast = function () {
                 if (resource.bid === null) {
 
                     if (debug) {
-                        console.log(colors.sell(resource.owner + ' Forecasted Sell Price: ') + colors.forecast('$'+bidForecast));
+                        console.log(colors.sell(resource.owner + ' Forecasted Sell Price: ') + colors.forecast('$'+bidForecast+(resource.sell_margin * .01)));
                         console.log(colors.sell(resource.owner + ' Sell Price Mean: ') + colors.red('$'+ tBid.mean()));
                     }
 
                     if (lastBidPrices[lastBidPrices.length - 1][1] > tBid.mean()) {
 
-                        if (bidForecast < lastBidPrices[lastBidPrices.length - 1][1]) {
+                        if ((parseFloat(bidForecast)+parseFloat((resource.sell_margin * 0.1))) < lastBidPrices[lastBidPrices.length - 1][1]) {
 
 
                             if ((parseFloat(resource.ask) + parseFloat(resource.sell_margin) ) < parseFloat(lastBidPrices[lastBidPrices.length - 1][1])) {

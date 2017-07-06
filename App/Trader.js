@@ -22,7 +22,7 @@ var fs = require('fs');
 var config = require('../config.js');
 
 
-var intervalSecond = 20;
+var intervalSecond = 10;
 var debug = config.debug;//TODO: Take this to the config file
 var bot = {};
 

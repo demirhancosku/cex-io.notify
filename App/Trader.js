@@ -94,7 +94,7 @@ var forecast = function () {
                 if (resource.ask === null) {
 
                     if (debug) {
-                        console.log(colors.buy(resource.owner + ' Forecasted Buy Price: ') + colors.forecast('$'+(parseFloat(askForecast) - parseFloat((resource.buy_margin * 0.1))));
+                        console.log(colors.buy(resource.owner + ' Forecasted Buy Price: ') + colors.forecast('$'+(parseFloat(askForecast) - parseFloat(resource.buy_margin * 0.1))));
                         console.log(colors.buy(resource.owner + ' Buy Price Mean: ') + colors.red('$'+tAsk.mean()));
                     }
 

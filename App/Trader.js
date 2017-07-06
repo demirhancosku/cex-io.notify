@@ -3,6 +3,7 @@
  */
 
 var colors = require('colors/safe');
+var https = require("https");
 
 colors.setTheme({
     silly: 'rainbow',
@@ -21,15 +22,16 @@ var fs = require('fs');
 var config = require('../config.js');
 
 
-var intervalSecond = 5;
+var intervalSecond = 20;
 var debug = config.debug;//TODO: Take this to the config file
 var bot = {};
 
 var forecast = function () {
     db.query('SELECT * FROM resources', function (err, resources) {
 
-        db.query('SELECT * FROM prices ORDER BY id DESC LIMIT 1500', function (err, rowsSalt) {
+        db.query('SELECT * FROM prices  WHERE ( id % 2 ) = 0 ORDER BY id DESC LIMIT 2500', function (err, rowsSalt) {
 
+            console.log('\n');
             console.log(colors.silly('*******************************************************************'));
             console.log(colors.buy('Buy Price: $' + rowsSalt[0].ask));
             console.log(colors.sell('Sell Price: $' + rowsSalt[0].bid));
@@ -52,26 +54,26 @@ var forecast = function () {
                 var tAsk = new timeseries.main(lastAskPrices.reverse());
 
                 var smoothedAsk = tAsk.smoother({period: resource.smooth_period}).dsp_itrend({
-                    alpha: 0.9
+                    alpha: resource.trend_alpha
                 }).save('smoothed');
 
 
                 var tBid = new timeseries.main(lastBidPrices.reverse());
 
                 var smoothedBid = tBid.smoother({period: resource.smooth_period}).dsp_itrend({
-                    alpha: 0.9
+                    alpha: resource.trend_alpha
                 }).save('smoothed');
 
 
                 var Askcoeffs = smoothedAsk.ARMaxEntropy({
                     data: tAsk.data.slice(tAsk.data.length - resource.forecast_count),
-                    degree: 10,
+                    degree: 30,
                     sample: resource.forecast_count
                 });
 
                 var Bidcoeffs = smoothedBid.ARMaxEntropy({
                     data: tBid.data.slice(tBid.data.length - resource.forecast_count),
-                    degree: 10,
+                    degree: 30,
                     sample: resource.forecast_count
                 });
 
@@ -158,15 +160,31 @@ var forecast = function () {
                 }
 
 
-                if(debug)
+                if(debug){
                     console.log(colors.debug('------------------------------------------------'));
+
+                    /*
+                    var bid_chart_url = tBid.chart({main: true,width:1000,height:300});
+                    bid_chart_url = bid_chart_url.substring(0, bid_chart_url.length - 2) + '0.5&chdl=Main|Forecast&chtt=Bid+'+encodeURI(resource.owner);
+
+                    //bot.sendPhoto(22353916,bid_chart_url);
+
+
+                    var ask_chart_url = tAsk.chart({main: true,width:1000,height:300});
+                    ask_chart_url = ask_chart_url.substring(0, ask_chart_url.length - 2) + '0.5&chdl=Main|Forecast&chtt=Ask+'+encodeURI(resource.owner);
+                    */
+                    //bot.sendPhoto(22353916,ask_chart_url);
+
+                }
 
 
 
             }
-            console.log(colors.silly('*******************************************************************'));
+
+
             console.log('\n');
-            console.log('\n');
+
+
         });
     });
 }

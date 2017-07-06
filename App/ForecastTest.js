@@ -33,12 +33,12 @@ module.exports = {
                      */
 
                     var smoothedAsk = tAsk.smoother({period: resource.smooth_period}).dsp_itrend({
-                        alpha: .9
+                        alpha: resource.trend_alpha
                     }).save('smoothed');
 
 
                     var smoothedBid = tBid.smoother({period: resource.smooth_period}).dsp_itrend({
-                        alpha: .9
+                        alpha: resource.trend_alpha
                     }).save('smoothed');
 
 
@@ -47,13 +47,13 @@ module.exports = {
                      */
                     var Askcoeffs = smoothedAsk.ARMaxEntropy({
                         data: tAsk.data.slice(tAsk.data.length - resource.forecast_count),
-                        degree: 10,
+                        degree: 30,
                         sample: resource.forecast_count
                     });
 
                     var Bidcoeffs = smoothedBid.ARMaxEntropy({
                         data: tBid.data.slice(tBid.data.length - resource.forecast_count),
-                        degree: 10,
+                        degree: 30,
                         sample: resource.forecast_count
                     });
 
@@ -70,19 +70,8 @@ module.exports = {
                     }
 
 
-                        bot.sendMessage(22353916, resource.owner+' İçin Sonuçlar:');
-                        bot.sendMessage(22353916, resource.owner+' Alış Tahmin:' + askForecast);
-
-
-                        var ask_chart_url = tAsk.chart({main: true, points: [{color: 'ff0000', point: tAsk.data.length}]});
-                        bot.sendPhoto(22353916, ask_chart_url);
-
-
-                        bot.sendMessage(22353916, resource.owner+' Satış Tahmin:' + bidForecast);
-
-                        var bid_chart_url = tBid.chart({main: true, points: [{color: 'ff0000', point: tBid.data.length}]});
-                        bot.sendPhoto(22353916, bid_chart_url);
-
+                    bot.sendMessage(-205665929,resource.owner + ' İçin Alış Tahmini ' + askForecast);
+                    bot.sendMessage(-205665929,resource.owner + ' Satış Tahmini ' + bidForecast);
                 }
 
             });

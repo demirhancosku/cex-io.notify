@@ -18,7 +18,7 @@ db.query('CREATE TABLE IF NOT EXISTS buy_targets (id INTEGER PRIMARY KEY, chatid
 db.query('CREATE TABLE IF NOT EXISTS prices (id INTEGER PRIMARY KEY, ask float, bid float, timestamp TEXT)');
 
 db.query('CREATE TABLE IF NOT EXISTS market_logs (id INTEGER PRIMARY KEY, type TEXT, value float, amount float, timestamp TEXT)');
-db.query('CREATE TABLE IF NOT EXISTS resources (id INTEGER PRIMARY KEY, owner TEXT, ask float, bid float, amount float, buy_margin float, sell_margin float, idle_count INTEGER, forecast_count INTEGER, mean_count INTEGER, smooth_period INTEGER, timestamp TEXT)');
+db.query('CREATE TABLE IF NOT EXISTS resources (id INTEGER PRIMARY KEY, owner TEXT, ask float, bid float, amount float, buy_margin float, sell_margin float, idle_count INTEGER, forecast_count INTEGER, mean_count INTEGER, smooth_period INTEGER, trend_alpha float,timestamp TEXT)');
 
 //db.query('CREATE TABLE IF NOT EXISTS forecasts_tests (id INTEGER PRIMARY KEY, ask float, bid float, timestamp TEXT)');
 

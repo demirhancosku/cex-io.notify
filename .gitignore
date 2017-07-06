@@ -67,3 +67,4 @@ typings/
 config.js
 /lite.db
 /.gitignore
+/imgs/*

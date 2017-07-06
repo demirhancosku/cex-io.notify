@@ -4,7 +4,7 @@
 
 var db = require('./App/Db.js');
 var client = require('./App/Client.js');
-var config = require('/config.js');
+var config = require('./config.js');
 
 setInterval(function () {
     client.api.ticker(couple = 'ETH/USD', function (param) {

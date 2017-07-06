@@ -94,13 +94,13 @@ var forecast = function () {
                 if (resource.ask === null) {
 
                     if (debug) {
-                        console.log(colors.buy(resource.owner + ' Forecasted Buy Price: ') + colors.forecast('$'+(parseFloat(askForecast) - parseFloat(resource.buy_margin * 0.05))));
+                        console.log(colors.buy(resource.owner + ' Forecasted Buy Price: ') + colors.forecast('$'+(parseFloat(askForecast))));
                         console.log(colors.buy(resource.owner + ' Buy Price Mean: ') + colors.red('$'+tAsk.mean()));
                     }
 
 
                     if (parseFloat(lastAskPrices[lastAskPrices.length - 1][1]) < tAsk.mean()) {
-                        if ((parseFloat(askForecast) - parseFloat((resource.buy_margin * 0.05)))  > parseFloat(lastAskPrices[lastAskPrices.length - 1][1])) {
+                        if (parseFloat(askForecast)  > parseFloat(lastAskPrices[lastAskPrices.length - 1][1])) {
 
                             if ((parseFloat(resource.bid) - parseFloat(resource.buy_margin)) > (parseFloat(lastAskPrices[lastAskPrices.length - 1][1]))) {
 
@@ -130,13 +130,13 @@ var forecast = function () {
                 if (resource.bid === null) {
 
                     if (debug) {
-                        console.log(colors.sell(resource.owner + ' Forecasted Sell Price: ') + colors.forecast('$'+(parseFloat(bidForecast)+parseFloat((resource.sell_margin * 0.05)))));
+                        console.log(colors.sell(resource.owner + ' Forecasted Sell Price: ') + colors.forecast('$'+(parseFloat(bidForecast))));
                         console.log(colors.sell(resource.owner + ' Sell Price Mean: ') + colors.red('$'+ tBid.mean()));
                     }
 
                     if (lastBidPrices[lastBidPrices.length - 1][1] > tBid.mean()) {
 
-                        if ((parseFloat(bidForecast)+parseFloat((resource.sell_margin * 0.05))) < lastBidPrices[lastBidPrices.length - 1][1]) {
+                        if (parseFloat(bidForecast) < lastBidPrices[lastBidPrices.length - 1][1]) {
 
 
                             if ((parseFloat(resource.ask) + parseFloat(resource.sell_margin) ) < parseFloat(lastBidPrices[lastBidPrices.length - 1][1])) {

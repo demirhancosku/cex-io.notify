@@ -94,7 +94,7 @@ var forecast = function () {
                 if (resource.ask === null) {
 
                     if (debug) {
-                        console.log(colors.buy(resource.owner + ' Forecasted Buy Price: ') + colors.forecast('$'+askForecast));
+                        console.log(colors.buy(resource.owner + ' Forecasted Buy Price: ') + colors.forecast('$'+(parseFloat(askForecast) - parseFloat((resource.buy_margin * 0.1))));
                         console.log(colors.buy(resource.owner + ' Buy Price Mean: ') + colors.red('$'+tAsk.mean()));
                     }
 
@@ -130,7 +130,7 @@ var forecast = function () {
                 if (resource.bid === null) {
 
                     if (debug) {
-                        console.log(colors.sell(resource.owner + ' Forecasted Sell Price: ') + colors.forecast('$'+bidForecast+(resource.sell_margin * .01)));
+                        console.log(colors.sell(resource.owner + ' Forecasted Sell Price: ') + colors.forecast('$'+(parseFloat(bidForecast)+parseFloat((resource.sell_margin * 0.1)))));
                         console.log(colors.sell(resource.owner + ' Sell Price Mean: ') + colors.red('$'+ tBid.mean()));
                     }
 

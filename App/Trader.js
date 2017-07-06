@@ -66,13 +66,13 @@ var forecast = function () {
 
 
                 var Askcoeffs = smoothedAsk.ARMaxEntropy({
-                    data: tAsk.data.slice(tAsk.data.length - resource.forecast_count),
+                    data: smoothedAsk.data.slice(tAsk.data.length - resource.forecast_count),
                     degree: 30,
                     sample: resource.forecast_count
                 });
 
                 var Bidcoeffs = smoothedBid.ARMaxEntropy({
-                    data: tBid.data.slice(tBid.data.length - resource.forecast_count),
+                    data: smoothedBid.data.slice(tBid.data.length - resource.forecast_count),
                     degree: 30,
                     sample: resource.forecast_count
                 });
@@ -95,12 +95,13 @@ var forecast = function () {
 
                     if (debug) {
                         console.log(colors.buy(resource.owner + ' Forecasted Buy Price: ') + colors.forecast('$'+(parseFloat(askForecast))));
+                        console.log(colors.buy(resource.owner + ' Previous Forecasted Buy: ') +  colors.forecast('$'+smoothedAsk.data[smoothedAsk.data.length-1][1]));
                         console.log(colors.buy(resource.owner + ' Buy Price Mean: ') + colors.red('$'+tAsk.mean()));
                     }
 
 
                     if (parseFloat(lastAskPrices[lastAskPrices.length - 1][1]) < tAsk.mean()) {
-                        if (parseFloat(askForecast)  > parseFloat(lastAskPrices[lastAskPrices.length - 1][1])) {
+                        if (parseFloat(askForecast)  > smoothedAsk.data[smoothedAsk.data.length-1][1]  /*parseFloat(lastAskPrices[lastAskPrices.length - 1][1])*/) {
 
                             if ((parseFloat(resource.bid) - parseFloat(resource.buy_margin)) > (parseFloat(lastAskPrices[lastAskPrices.length - 1][1]))) {
 
@@ -131,12 +132,13 @@ var forecast = function () {
 
                     if (debug) {
                         console.log(colors.sell(resource.owner + ' Forecasted Sell Price: ') + colors.forecast('$'+(parseFloat(bidForecast))));
+                        console.log(colors.sell(resource.owner + ' Previous Forecasted Sell: ') +  colors.forecast('$'+smoothedBid.data[smoothedBid.data.length - 1][1]));
                         console.log(colors.sell(resource.owner + ' Sell Price Mean: ') + colors.red('$'+ tBid.mean()));
                     }
 
                     if (lastBidPrices[lastBidPrices.length - 1][1] > tBid.mean()) {
 
-                        if (parseFloat(bidForecast) < lastBidPrices[lastBidPrices.length - 1][1]) {
+                        if (parseFloat(bidForecast) < smoothedBid.data[smoothedBid.data.length - 1][1] /*lastBidPrices[lastBidPrices.length - 1][1]*/) {
 
 
                             if ((parseFloat(resource.ask) + parseFloat(resource.sell_margin) ) < parseFloat(lastBidPrices[lastBidPrices.length - 1][1])) {

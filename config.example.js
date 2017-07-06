@@ -19,4 +19,7 @@ config.persons = []; // trusted telegram ids
 config.chats = []; // trusted chat ids
 
 
+config.debug = true; // console.log output
+
+
 module.exports = config;

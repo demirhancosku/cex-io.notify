@@ -28,11 +28,11 @@ var bot = {};
 var forecast = function () {
     db.query('SELECT * FROM resources', function (err, resources) {
 
-        db.query('SELECT * FROM prices WHERE ( id % 2 ) = 0 ORDER BY id DESC LIMIT 1500', function (err, rows) {
+        db.query('SELECT * FROM prices ORDER BY id DESC LIMIT 1500', function (err, rowsSalt) {
 
             console.log(colors.silly('*******************************************************************'));
-            console.log(colors.buy('Buy Price: $' + rows[rows.length - 1].ask));
-            console.log(colors.sell('Sell Price: $' + rows[rows.length - 1].bid));
+            console.log(colors.buy('Buy Price: $' + rowsSalt[0].ask));
+            console.log(colors.sell('Sell Price: $' + rowsSalt[0].bid));
             console.log(colors.debug('------------------------------------------------'));
 
 
@@ -42,7 +42,7 @@ var forecast = function () {
 
                 var lastAskPrices = [], lastBidPrices = [];
 
-                rows  = rows.slice(rows.length - resources.mean_count);
+                rows  = rowsSalt.slice(0,resources.mean_count);
                 for (i in rows) {
                     lastAskPrices.push([new Date(rows[i].timestamp * 1000), parseFloat(rows[i].ask)]);
                     lastBidPrices.push([new Date(rows[i].timestamp * 1000), parseFloat(rows[i].bid)]);
@@ -209,7 +209,8 @@ var buyNow = function (resource, ask, t) {
         {
             ask: ask,
             bid: null,
-            timestamp: +new Date()
+            timestamp: +new Date(),
+            idle_count:0
 
         },
         {
@@ -239,7 +240,8 @@ var sellNow = function (resource, bid, t) {
         {
             ask: null,
             bid: bid,
-            timestamp: +new Date()
+            timestamp: +new Date(),
+            idle_count:0
 
         },
         {

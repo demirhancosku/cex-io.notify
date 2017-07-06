@@ -4,10 +4,17 @@
 
 var db = require('./App/Db.js');
 var client = require('./App/Client.js');
+var config = require('/config.js');
 
 setInterval(function () {
     client.api.ticker(couple = 'ETH/USD', function (param) {
+        if(config.debug){
+            console.log(param);
+            console.log('\n');
+        }
+
         db.query("INSERT INTO prices SET ?", {ask: param.ask, bid: param.bid, timestamp: param.timestamp});
+
     });
 }, 10000);
 

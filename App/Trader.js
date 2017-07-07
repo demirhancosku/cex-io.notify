@@ -43,8 +43,8 @@ var forecast = function () {
                 var resource = resources[r];
 
                 var lastAskPrices = [], lastBidPrices = [];
+                rows  = rowsSalt.slice(0,resource.mean_count);
 
-                rows  = rowsSalt.slice(0,resources.mean_count);
                 for (i in rows) {
                     lastAskPrices.push([new Date(rows[i].timestamp * 1000), parseFloat(rows[i].ask)]);
                     lastBidPrices.push([new Date(rows[i].timestamp * 1000), parseFloat(rows[i].bid)]);
@@ -52,6 +52,8 @@ var forecast = function () {
 
 
                 var tAsk = new timeseries.main(lastAskPrices.reverse());
+
+                console.log(colors.silly(resource.owner + ' Price Count: ') + colors.red('$'+tAsk.data.length));
 
                 var smoothedAsk = tAsk.smoother({period: resource.smooth_period}).dsp_itrend({
                     alpha: resource.trend_alpha

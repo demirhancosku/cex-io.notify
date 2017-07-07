@@ -94,15 +94,26 @@ var forecast = function () {
                 var suitableForAsk = false;
                 if (resource.ask === null) {
 
+
+                    var lastForecastAsk = smoothedAsk.data[smoothedAsk.data.length - 1][1];
+
                     if (debug) {
-                        console.log(colors.buy(resource.owner + ' Forecasted Buy Price: ') + colors.forecast('$' + askForecast));
-                        console.log(colors.buy(resource.owner + ' Previous Forecasted Buy: ') + colors.forecast('$' + smoothedAsk.data[smoothedAsk.data.length - 1][1]));
+
+                        var buyState =  'none';
+                        if(parseFloat(askForecast) < lastForecastAsk){
+                            buyState = 'down';
+                        }else if(parseFloat(askForecast) > lastForecastAsk){
+                            buyState = 'up';
+                        }
+
+                        console.log(colors.buy(resource.owner + ' Forecasted Buy Price: ') + colors.forecast('$' + askForecast) + colors.buy(' State:') + colors.blue(buyState));
+                        console.log(colors.buy(resource.owner + ' Previous Forecasted Buy: ') + colors.forecast('$' + lastForecastAsk));
                         console.log(colors.buy(resource.owner + ' Buy Price Mean: ') + colors.red('$' + tAsk.mean()));
                     }
 
 
                     if (lastAskPrice < tAsk.mean()) {
-                        if (askForecast > smoothedAsk.data[smoothedAsk.data.length - 1][1]  /*lastAskPrice*/) {
+                        if (askForecast > lastForecastAsk  /*lastAskPrice*/) {
 
 
                             if ((parseFloat(resource.bid) - parseFloat(resource.buy_margin)) > (lastAskPrice)) {
@@ -130,15 +141,25 @@ var forecast = function () {
                 var suitableForBid = false;
                 if (resource.bid === null) {
 
+                    var lastForecastBid = smoothedBid.data[smoothedBid.data.length - 1][1];
+
                     if (debug) {
-                        console.log(colors.sell(resource.owner + ' Forecasted Sell Price: ') + colors.forecast('$' + (parseFloat(bidForecast))));
-                        console.log(colors.sell(resource.owner + ' Previous Forecasted Sell: ') + colors.forecast('$' + smoothedBid.data[smoothedBid.data.length - 1][1]));
+
+                        var sellState =  'none';
+                        if(parseFloat(bidForecast) < lastForecastBid){
+                            sellState = 'down';
+                        }else if(parseFloat(bidForecast) > lastForecastBid){
+                            sellState = 'up';
+                        }
+
+                        console.log(colors.sell(resource.owner + ' Forecasted Sell Price: ') + colors.forecast('$' + (parseFloat(bidForecast))) + colors.sell(' State:') + colors.blue(sellState) );
+                        console.log(colors.sell(resource.owner + ' Previous Forecasted Sell: ') + colors.forecast('$' +lastForecastBid));
                         console.log(colors.sell(resource.owner + ' Sell Price Mean: ') + colors.red('$' + tBid.mean()));
                     }
 
                     if (lastBidPrices[lastBidPrices.length - 1][1] > tBid.mean()) {
 
-                        if (parseFloat(bidForecast) < smoothedBid.data[smoothedBid.data.length - 1][1] /*lastBidPrices[lastBidPrices.length - 1][1]*/) {
+                        if (parseFloat(bidForecast) < lastForecastBid /*lastBidPrices[lastBidPrices.length - 1][1]*/) {
 
 
                             if ((parseFloat(resource.ask) + parseFloat(resource.sell_margin) ) < parseFloat(lastBidPrices[lastBidPrices.length - 1][1])) {

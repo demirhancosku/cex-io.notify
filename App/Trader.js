@@ -29,9 +29,8 @@ var bot = {};
 var forecast = function () {
     db.query('SELECT * FROM resources', function (err, resources) {
 
-        db.query('SELECT * FROM prices  WHERE ( id % 2 ) = 0 ORDER BY id DESC LIMIT 2500', function (err, rowsSalt) {
+        db.query('SELECT * FROM prices ORDER BY id DESC LIMIT 10000', function (err, rowsSalt) {
 
-            console.log('\n');
             console.log(colors.silly('*******************************************************************'));
             console.log(colors.buy('Buy Price: $' + rowsSalt[0].ask));
             console.log(colors.sell('Sell Price: $' + rowsSalt[0].bid));
@@ -43,17 +42,16 @@ var forecast = function () {
                 var resource = resources[r];
 
                 var lastAskPrices = [], lastBidPrices = [];
-                rows  = rowsSalt.slice(0,resource.mean_count);
 
+                rows = rowsSalt.slice(0, resource.mean_count);
                 for (i in rows) {
                     lastAskPrices.push([new Date(rows[i].timestamp * 1000), parseFloat(rows[i].ask)]);
                     lastBidPrices.push([new Date(rows[i].timestamp * 1000), parseFloat(rows[i].bid)]);
                 }
 
+                var lastAskPrice = parseFloat(lastAskPrices[lastAskPrices.length - 1][1]);
 
                 var tAsk = new timeseries.main(lastAskPrices.reverse());
-
-                console.log(colors.silly(resource.owner + ' Price Count: ') + colors.red('$'+tAsk.data.length));
 
                 var smoothedAsk = tAsk.smoother({period: resource.smooth_period}).dsp_itrend({
                     alpha: resource.trend_alpha
@@ -91,32 +89,46 @@ var forecast = function () {
                 }
 
 
+                console.log(colors.debug(resource.owner + ' processed in the last ') + colors.red(Math.floor(( (smoothedAsk.data[smoothedAsk.data.length - 1][0] - smoothedAsk.data[0][0]) / 1000) / 60) + ' munites.') + colors.debug(' Mean count: ') + colors.red(smoothedAsk.data.length))
 
                 var suitableForAsk = false;
                 if (resource.ask === null) {
 
+
+                    var lastForecastAsk = smoothedAsk.data[smoothedAsk.data.length - 1][1];
+
                     if (debug) {
-                        console.log(colors.buy(resource.owner + ' Forecasted Buy Price: ') + colors.forecast('$'+(parseFloat(askForecast))));
-                        console.log(colors.buy(resource.owner + ' Previous Forecasted Buy: ') +  colors.forecast('$'+smoothedAsk.data[smoothedAsk.data.length-1][1]));
-                        console.log(colors.buy(resource.owner + ' Buy Price Mean: ') + colors.red('$'+tAsk.mean()));
+
+                        var buyState =  'none';
+                        if(parseFloat(askForecast) < lastForecastAsk){
+                            buyState = 'down';
+                        }else if(parseFloat(askForecast) > lastForecastAsk){
+                            buyState = 'up';
+                        }
+
+                        console.log(colors.buy(resource.owner + ' Forecasted Buy Price: ') + colors.forecast('$' + askForecast) + colors.buy(' State:') + colors.blue(buyState));
+                        console.log(colors.buy(resource.owner + ' Previous Forecasted Buy: ') + colors.forecast('$' + lastForecastAsk));
+                        console.log(colors.buy(resource.owner + ' Buy Price Mean: ') + colors.red('$' + tAsk.mean()));
                     }
 
 
-                    if (parseFloat(lastAskPrices[lastAskPrices.length - 1][1]) < tAsk.mean()) {
-                        if (parseFloat(askForecast)  > smoothedAsk.data[smoothedAsk.data.length-1][1]  /*parseFloat(lastAskPrices[lastAskPrices.length - 1][1])*/) {
+                    if (lastAskPrice < tAsk.mean()) {
+                        if (askForecast > lastForecastAsk  /*lastAskPrice*/) {
 
-                            if ((parseFloat(resource.bid) - parseFloat(resource.buy_margin)) > (parseFloat(lastAskPrices[lastAskPrices.length - 1][1]))) {
+
+                            if ((parseFloat(resource.bid) - parseFloat(resource.buy_margin)) > (lastAskPrice)) {
 
                                 suitableForAsk = true;
                                 buyNow(resource, lastAskPrices[lastAskPrices.length - 1][1], tAsk);
                             }
+
 
                         }
 
                     }
 
                     if (debug) {
-                        console.log(colors.buy('For ' + resource.owner + ' Selled at ') + colors.red('$'+ + resource.bid) + colors.buy('. Expected Purchase Value: ') + colors.red('$'+(parseFloat(resource.bid) - parseFloat(resource.buy_margin))));
+                        console.log(colors.buy('For ' + resource.owner + ' Selled at ') + colors.red('$' + +resource.bid) + colors.buy('. Expected Purchase Value: ') + colors.red('$' + (parseFloat(resource.bid) - parseFloat(resource.buy_margin))));
                         console.log(colors.buy('Is suitable: ' + suitableForAsk));
                     }
 
@@ -126,21 +138,28 @@ var forecast = function () {
 
                 }
 
-
-
-
                 var suitableForBid = false;
                 if (resource.bid === null) {
 
+                    var lastForecastBid = smoothedBid.data[smoothedBid.data.length - 1][1];
+
                     if (debug) {
-                        console.log(colors.sell(resource.owner + ' Forecasted Sell Price: ') + colors.forecast('$'+(parseFloat(bidForecast))));
-                        console.log(colors.sell(resource.owner + ' Previous Forecasted Sell: ') +  colors.forecast('$'+smoothedBid.data[smoothedBid.data.length - 1][1]));
-                        console.log(colors.sell(resource.owner + ' Sell Price Mean: ') + colors.red('$'+ tBid.mean()));
+
+                        var sellState =  'none';
+                        if(parseFloat(bidForecast) < lastForecastBid){
+                            sellState = 'down';
+                        }else if(parseFloat(bidForecast) > lastForecastBid){
+                            sellState = 'up';
+                        }
+
+                        console.log(colors.sell(resource.owner + ' Forecasted Sell Price: ') + colors.forecast('$' + (parseFloat(bidForecast))) + colors.sell(' State:') + colors.blue(sellState) );
+                        console.log(colors.sell(resource.owner + ' Previous Forecasted Sell: ') + colors.forecast('$' +lastForecastBid));
+                        console.log(colors.sell(resource.owner + ' Sell Price Mean: ') + colors.red('$' + tBid.mean()));
                     }
 
                     if (lastBidPrices[lastBidPrices.length - 1][1] > tBid.mean()) {
 
-                        if (parseFloat(bidForecast) < smoothedBid.data[smoothedBid.data.length - 1][1] /*lastBidPrices[lastBidPrices.length - 1][1]*/) {
+                        if (parseFloat(bidForecast) < lastForecastBid /*lastBidPrices[lastBidPrices.length - 1][1]*/) {
 
 
                             if ((parseFloat(resource.ask) + parseFloat(resource.sell_margin) ) < parseFloat(lastBidPrices[lastBidPrices.length - 1][1])) {
@@ -148,12 +167,13 @@ var forecast = function () {
                                 suitableForBid = true;
                                 sellNow(resource, lastBidPrices[lastBidPrices.length - 1][1], tBid);
                             }
+
                         }
 
                     }
 
                     if (debug) {
-                        console.log(colors.sell('For ' + resource.owner + ' Purchased at ') + colors.red('$'+ + resource.ask) + colors.sell(' Expected Sell Value: ') + colors.red('$'+ ( parseFloat(resource.ask) + parseFloat(resource.sell_margin))));
+                        console.log(colors.sell('For ' + resource.owner + ' Purchased at ') + colors.red('$' + +resource.ask) + colors.sell(' Expected Sell Value: ') + colors.red('$' + ( parseFloat(resource.ask) + parseFloat(resource.sell_margin))));
                         console.log(colors.sell('Is suitable: ' + suitableForBid));
 
                     }
@@ -164,29 +184,25 @@ var forecast = function () {
                 }
 
 
-                if(debug){
+                if (debug) {
                     console.log(colors.debug('------------------------------------------------'));
 
                     /*
-                    var bid_chart_url = tBid.chart({main: true,width:1000,height:300});
-                    bid_chart_url = bid_chart_url.substring(0, bid_chart_url.length - 2) + '0.5&chdl=Main|Forecast&chtt=Bid+'+encodeURI(resource.owner);
+                     var bid_chart_url = tBid.chart({main: true,width:1000,height:300});
+                     bid_chart_url = bid_chart_url.substring(0, bid_chart_url.length - 2) + '0.5&chdl=Main|Forecast&chtt=Bid+'+encodeURI(resource.owner);
 
-                    //bot.sendPhoto(22353916,bid_chart_url);
+                     //bot.sendPhoto(22353916,bid_chart_url);
 
 
-                    var ask_chart_url = tAsk.chart({main: true,width:1000,height:300});
-                    ask_chart_url = ask_chart_url.substring(0, ask_chart_url.length - 2) + '0.5&chdl=Main|Forecast&chtt=Ask+'+encodeURI(resource.owner);
-                    */
+                     var ask_chart_url = tAsk.chart({main: true,width:1000,height:300});
+                     ask_chart_url = ask_chart_url.substring(0, ask_chart_url.length - 2) + '0.5&chdl=Main|Forecast&chtt=Ask+'+encodeURI(resource.owner);
+                     */
                     //bot.sendPhoto(22353916,ask_chart_url);
 
                 }
 
 
-
             }
-
-
-            console.log('\n');
 
 
         });
@@ -214,7 +230,7 @@ var init = function (client, chatBot) {
         console.log('Total İşlem Karı: ' + total + '$');
 
         forecast();
-        setInterval(forecast, intervalSecond*1000);
+        setInterval(forecast, intervalSecond * 1000);
     });
 
 
@@ -232,7 +248,7 @@ var buyNow = function (resource, ask, t) {
             ask: ask,
             bid: null,
             timestamp: +new Date(),
-            idle_count:0
+            idle_count: 0
 
         },
         {
@@ -263,7 +279,7 @@ var sellNow = function (resource, bid, t) {
             ask: null,
             bid: bid,
             timestamp: +new Date(),
-            idle_count:0
+            idle_count: 0
 
         },
         {
@@ -291,10 +307,10 @@ var idle = function (resource) {
         {
             id: resource.id
         }
-    ],function () {
+    ], function () {
 
-        if(resource.idle_count + 1 === 720*2 || resource.idle_count + 1 === 720*4 || resource.idle_count + 1 === 720*8){
-            bot.sendMessage(22353916, resource.owner + ' parası '+ parseInt(((resource.idle_count + 1) * intervalSecond) / 60 /60) +' saattir işlem göremiyor.');
+        if (resource.idle_count + 1 === 720 * 2 || resource.idle_count + 1 === 720 * 4 || resource.idle_count + 1 === 720 * 8) {
+            bot.sendMessage(22353916, resource.owner + ' parası ' + parseInt(((resource.idle_count + 1) * intervalSecond) / 60 / 60) + ' saattir işlem göremiyor.');
         }
     });
 }

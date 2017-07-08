@@ -10,7 +10,7 @@ var target = require('./App/TargetControl.js');
 var trader = require('./App/Trader.js');
 
 router.init(client);
-target.init(client, router.bot, router.messageLimit);
+target.init(router.bot, router.messageLimit);
 trader.init(client, router.bot);
 
 

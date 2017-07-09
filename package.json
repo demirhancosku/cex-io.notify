@@ -10,6 +10,8 @@
     }
   ],
   "dependencies": {
+    "chart.js": "^2.6.0",
+    "chartjs-node": "^1.4.1",
     "colors": "^1.1.2",
     "dblite": "^0.7.8",
     "forever": "^0.15.3",

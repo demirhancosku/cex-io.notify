@@ -4,7 +4,7 @@
 var ChartjsNode = require('chartjs-node');
 
 
-var db = require('./Db.js');
+var db = require('../App/Db.js');
 var timeseries = require("timeseries-analysis");
 
 var colors = require('colors/safe');
@@ -22,22 +22,21 @@ var util = require('../Utils/TradeUtil.js');
 
 
 var datasets = [
-    {start: 1499446380, end: 1499449740, forecast:[]},
-    {start: 1499435400, end: 1499436900, forecast:[]},
-    {start: 1499439960, end: 1499446320, forecast:[]},
-    {start: 1499387820, end: 1499410800, forecast:[]},
-    {start: 1499411760, end: 1499426700, forecast:[]}
+    {start: 1499446380, end: 1499449740, forecast:[], res:[4]},
+    {start: 1499435400, end: 1499436900, forecast:[], res:[5]},
+    {start: 1499439960, end: 1499446320, forecast:[], res:[6]},
+    {start: 1499387820, end: 1499410800, forecast:[], res:[7]},
+    {start: 1499411760, end: 1499426700, forecast:[], res:[8]}
 ];
 
 var currentDataset = 0;
 var startPriceIndex = 0;
 
-var windowDivider = function (rowsSalt) {
+var windowDivider = function (rowsSalt,means) {
     var startPrice = rowsSalt[startPriceIndex];
 
-    db.query('SELECT * FROM prices WHERE timestamp < ' + startPrice.timestamp + ' ORDER BY id LIMIT 1000', function (err, rowsS) {
-        db.query('SELECT * FROM resources WHERE id > 3', function (err, resources) {
-
+    db.query('SELECT * FROM prices WHERE timestamp < ' + startPrice.timestamp + ' ORDER BY id DESC LIMIT 1000', function (err, rowsS) {
+        db.query('SELECT * FROM resources WHERE id IN ('+datasets[currentDataset].res.join(',') + ')', function (err, resources) {
 
             for (r in resources) {
 
@@ -51,7 +50,7 @@ var windowDivider = function (rowsSalt) {
                 }
 
 
-                var rows = rowsS.slice(0, resources.mean_count);
+                var rows = rowsS.slice(0, resource.mean_count);
 
                 var lastAskPrices = [], lastBidPrices = [];
 
@@ -127,7 +126,7 @@ var windowDivider = function (rowsSalt) {
 
 
                             if ((parseFloat(resource.bid) - parseFloat(resource.buy_margin)) > (lastAskPrice)) {
-                                console.log('buy');
+                                console.log(resource.owner + ' buy at '+lastAskPrice);
 
                                 suitableForAsk = true;
                                 buyNow(resource, lastAskPrices[lastAskPrices.length - 1][1], tAsk);
@@ -136,7 +135,7 @@ var windowDivider = function (rowsSalt) {
                                 var xDate = rawDate.getHours() + ':' + rawDate.getMinutes();
 
                                 datasets[currentDataset].forecast[resource.id].buy.push({
-                                    r:5,
+                                    r:12,
                                     y: lastAskPrices[lastAskPrices.length - 1][1],
                                     x: xDate
                                 });
@@ -161,7 +160,8 @@ var windowDivider = function (rowsSalt) {
 
 
                             if ((parseFloat(resource.ask) + parseFloat(resource.sell_margin) ) < parseFloat(lastBidPrices[lastBidPrices.length - 1][1])) {
-                                console.log('sell');
+                                console.log(resource.owner +' sell at ' + parseFloat(lastBidPrices[lastBidPrices.length - 1][1]));
+
                                 suitableForBid = true;
                                 sellNow(resource, lastBidPrices[lastBidPrices.length - 1][1], tBid);
 
@@ -169,7 +169,7 @@ var windowDivider = function (rowsSalt) {
                                 var xDate = rawDate.getHours() + ':' + rawDate.getMinutes();
 
                                 datasets[currentDataset].forecast[resource.id].sell.push({
-                                    r:5,
+                                    r:12,
                                     y: lastBidPrices[lastBidPrices.length - 1][1],
                                     x: xDate
                                 });
@@ -193,7 +193,8 @@ var windowDivider = function (rowsSalt) {
 
             if (rowsSalt.length - 1 > startPriceIndex) {
                 startPriceIndex = ++startPriceIndex;
-                windowDivider(rowsSalt);
+                means.push({'ask' : tAsk.mean(), 'bid' : tBid.mean()});
+                windowDivider(rowsSalt,means);
             } else {
                 /* Grafik */
 
@@ -212,7 +213,7 @@ var windowDivider = function (rowsSalt) {
                         fbid = datasets[currentDataset].forecast[res.id].sell;
                     }
 
-                    create_chart(res,tBid.data,tAsk.data,fask,fbid,currentDataset);
+                    create_chart(res,tBid.reset().data,smoothedBid.data,tAsk.reset().data,smoothedAsk.data,fask,fbid,currentDataset,means);
                 }
 
 
@@ -238,10 +239,11 @@ var lookUp = function (current) {
     console.log(colors.silly('Bakılan Data Set'));
     console.log(colors.blue(JSON.stringify(dataset)));
 
-    db.query('SELECT * FROM prices WHERE timestamp BETWEEN ' + dataset.start + ' AND ' + dataset.end + ' ORDER BY id', function (err, rowsSalt) {
+    var means = [];
+    db.query('SELECT * FROM prices WHERE timestamp BETWEEN ' + dataset.start + ' AND ' + dataset.end , function (err, rowsSalt) {
 
         console.log(colors.red('Kontrol Edilen Data Miktarı: ' + rowsSalt.length));
-        windowDivider(rowsSalt);
+        windowDivider(rowsSalt,means);
 
     });
 
@@ -249,13 +251,15 @@ var lookUp = function (current) {
 }
 
 
-var create_chart = function (resource,bid, ask, fAsk, fBid,datasetIndex) {
+var create_chart = function (resource, bid,bidSmooth, ask,askSmooth, fAsk, fBid,datasetIndex,means) {
 
-    console.log('Tahmin Alış');
-    console.log(fAsk);
-    console.log('Tahmin Satış');
-    console.log(fBid);
+    console.log('Ask Count:' + ask.length);
+    console.log('Bid Count:' + bid.length);
 
+    console.log('Bid Smooth Count:' + bidSmooth.length);
+    console.log('Ask Smooth Count:' + askSmooth.length);
+
+    console.log('Mean Count:' + means.length);
 
     var chartNode = new ChartjsNode(2600, 800);
 
@@ -276,7 +280,13 @@ var create_chart = function (resource,bid, ask, fAsk, fBid,datasetIndex) {
                     data: getYAxisForChart(bid),
                     type: 'line',
                     backgroundColor: "#36a2eb",
-                    lineTension:0.1,
+                    fill:false
+                },
+                {
+                    label: 'Satış Değerleri Smooth',
+                    data: getYAxisForChart(bidSmooth),
+                    type: 'line',
+                    backgroundColor: "#206492",
                     fill:false
                 },
                 {
@@ -284,7 +294,27 @@ var create_chart = function (resource,bid, ask, fAsk, fBid,datasetIndex) {
                     data: getYAxisForChart(ask),
                     type: 'line',
                     backgroundColor: "#61f661",
-                    lineTension:0.1,
+                    fill:false
+                },
+                {
+                    label: 'Alış Değerleri Smooth',
+                    data: getYAxisForChart(askSmooth),
+                    type: 'line',
+                    backgroundColor: "#0aa90a",
+                    fill:false
+                },
+                {
+                    label: 'Alış Değerleri Mean',
+                    data: getMeanYAxisForChart(means,'ask'),
+                    type: 'line',
+                    backgroundColor: "#9ff99f",
+                    fill:false
+                },
+                {
+                    label: 'Satış Değerleri Mean',
+                    data: getMeanYAxisForChart(means,'bid'),
+                    type: 'line',
+                    backgroundColor: "#a2d4f6",
                     fill:false
                 },
                 {
@@ -343,6 +373,17 @@ var getYAxisForChart = function (data) {
 
     return container;
 }
+
+var getMeanYAxisForChart = function (data,key) {
+    var container = [];
+
+    for (i in data) {
+        container.push(data[i][key]);
+    }
+
+    return container;
+}
+
 
 
 

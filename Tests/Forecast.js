@@ -3,7 +3,7 @@
  */
 
 
-var forecast = require('./App/ForecastTest.js');
+var forecast = require('./ForecastTest.js');
 
 forecast.init();
 

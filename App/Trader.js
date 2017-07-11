@@ -23,9 +23,11 @@ var fs = require('fs');
 var config = require('../config.js');
 var client;
 
+
 var intervalSecond = 10;
 var debug = config.debug;//TODO: Take this to the config file
 var bot = {};
+var promiseCount = 31;
 
 var forecast = function () {
     db.query('SELECT * FROM resources WHERE status = 1', function (err, resources) {
@@ -120,7 +122,7 @@ var forecast = function () {
 
                     //if (lastAskPrice < tAsk.mean()) {
                         //if (askForecast > lastForecastAsk  /*lastAskPrice*/) {
-                    var promiseResultAsk = util.deepPromise(smoothedAsk,21)
+                    var promiseResultAsk = util.deepPromise(smoothedAsk,promiseCount)
                      if (promiseResultAsk) {
 
 
@@ -173,7 +175,7 @@ var forecast = function () {
                     //if (lastBidPrices[lastBidPrices.length - 1][1] > tBid.mean()) {
 
                         //if (parseFloat(bidForecast) < lastForecastBid /*lastBidPrices[lastBidPrices.length - 1][1]*/) {
-                        var promiseResultBid = util.peakPromise(smoothedBid, 21);
+                        var promiseResultBid = util.peakPromise(smoothedBid, promiseCount);
                         if (promiseResultBid) {
 
 
@@ -236,6 +238,8 @@ var buyNow = function (resource, ask) {
     client.api.buy_sell('buy', resource.amount, 'ETH/USD', function (result) {
         if (result.error !== undefined) {
             console.log('ERROR');
+            console.log(result);
+
         } else {
 
             bot.sendMessage(22353916, ask + '$ değerinde ' + resource.amount + ' ETH Satın Aldım ' + resource.owner);
@@ -272,6 +276,7 @@ var sellNow = function (resource, bid) {
     client.api.buy_sell('sell', resource.amount, 'ETH/USD', function (result) {
         if(result.error !== undefined){
             console.log('ERROR');
+            console.log(result);
         }else{
 
             bot.sendMessage(22353916, bid + '$ değerinde ' + resource.amount + ' ETH Sattım '+ resource.owner);

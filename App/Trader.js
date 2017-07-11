@@ -21,21 +21,24 @@ var timeseries = require("timeseries-analysis");
 var fs = require('fs');
 
 var config = require('../config.js');
-
+var client;
 
 var intervalSecond = 10;
 var debug = config.debug;//TODO: Take this to the config file
 var bot = {};
 
 var forecast = function () {
-    db.query('SELECT * FROM resources WHERE id < 9', function (err, resources) {
+    db.query('SELECT * FROM resources WHERE status = 1', function (err, resources) {
 
         db.query('SELECT * FROM prices ORDER BY id DESC LIMIT 10000', function (err, rowsSalt) {
 
-            console.log(colors.silly('*******************************************************************'));
-            console.log(colors.buy('Buy Price: $' + rowsSalt[0].ask));
-            console.log(colors.sell('Sell Price: $' + rowsSalt[0].bid));
-            console.log(colors.debug('------------------------------------------------'));
+            if (debug){
+                console.log(colors.silly('*******************************************************************'));
+                console.log(colors.buy('Buy Price: $' + rowsSalt[0].ask));
+                console.log(colors.sell('Sell Price: $' + rowsSalt[0].bid));
+                console.log(colors.debug('------------------------------------------------'));
+            }
+
 
 
             for (r in resources) {
@@ -70,13 +73,13 @@ var forecast = function () {
 
                 var Askcoeffs = smoothedAsk.ARMaxEntropy({
                     data: smoothedAsk.data.slice(tAsk.data.length - resource.forecast_count),
-                    degree: 30,
+                    degree: 10,
                     sample: resource.forecast_count
                 });
 
                 var Bidcoeffs = smoothedBid.ARMaxEntropy({
                     data: smoothedBid.data.slice(tBid.data.length - resource.forecast_count),
-                    degree: 30,
+                    degree: 10,
                     sample: resource.forecast_count
                 });
 
@@ -91,7 +94,7 @@ var forecast = function () {
                     bidForecast -= tBid.data[tBid.data.length - 1 - k][1] * Bidcoeffs[k];
                 }
 
-
+                if (debug)
                 console.log(colors.debug(resource.owner + ' processed in the last ') + colors.red(Math.floor(( (smoothedAsk.data[smoothedAsk.data.length - 1][0] - smoothedAsk.data[0][0]) / 1000) / 60) + ' munites.') + colors.debug(' Mean count: ') + colors.red(smoothedAsk.data.length))
 
                 var suitableForAsk = false;
@@ -117,13 +120,18 @@ var forecast = function () {
 
                     //if (lastAskPrice < tAsk.mean()) {
                         //if (askForecast > lastForecastAsk  /*lastAskPrice*/) {
-                        if (util.deepPromise(smoothedAsk, 7)) {
+                        if (util.deepPromise(smoothedAsk,15)) {
+
 
 
                             if ((parseFloat(resource.bid) - parseFloat(resource.buy_margin)) > (lastAskPrice)) {
 
                                 suitableForAsk = true;
-                                buyNow(resource, lastAskPrices[lastAskPrices.length - 1][1], tAsk);
+                                buyNow(resource, lastAskPrices[lastAskPrices.length - 1][1]);
+                            }else{
+                                if(debug){
+                                    console.log(colors.buy(resource.owner + ' Deep True / Margin False '));
+                                }
                             }
 
 
@@ -164,13 +172,17 @@ var forecast = function () {
                     //if (lastBidPrices[lastBidPrices.length - 1][1] > tBid.mean()) {
 
                         //if (parseFloat(bidForecast) < lastForecastBid /*lastBidPrices[lastBidPrices.length - 1][1]*/) {
-                        if (util.deepPromise(smoothedAsk, 7)) {
+                        if (util.peakPromise(smoothedAsk, 15)) {
 
 
                             if ((parseFloat(resource.ask) + parseFloat(resource.sell_margin) ) < parseFloat(lastBidPrices[lastBidPrices.length - 1][1])) {
 
                                 suitableForBid = true;
-                                sellNow(resource, lastBidPrices[lastBidPrices.length - 1][1], tBid);
+                                sellNow(resource, lastBidPrices[lastBidPrices.length - 1][1]);
+                            }else{
+                                if(debug){
+                                    console.log(colors.buy(resource.owner + ' Peek True / Margin False '));
+                                }
                             }
 
                         }
@@ -192,17 +204,7 @@ var forecast = function () {
                 if (debug) {
                     console.log(colors.debug('------------------------------------------------'));
 
-                    /*
-                     var bid_chart_url = tBid.chart({main: true,width:1000,height:300});
-                     bid_chart_url = bid_chart_url.substring(0, bid_chart_url.length - 2) + '0.5&chdl=Main|Forecast&chtt=Bid+'+encodeURI(resource.owner);
 
-                     //bot.sendPhoto(22353916,bid_chart_url);
-
-
-                     var ask_chart_url = tAsk.chart({main: true,width:1000,height:300});
-                     ask_chart_url = ask_chart_url.substring(0, ask_chart_url.length - 2) + '0.5&chdl=Main|Forecast&chtt=Ask+'+encodeURI(resource.owner);
-                     */
-                    //bot.sendPhoto(22353916,ask_chart_url);
 
                 }
 
@@ -215,88 +217,85 @@ var forecast = function () {
 }
 
 
-var init = function (client, chatBot) {
+var init = function (clnt, chatBot) {
     bot = chatBot;
+    client = clnt;
 
 
-    db.query('SELECT * FROM market_logs', function (err, rows) {
-        var total = 0;
-
-        for (i in rows) {
-
-            if (rows[i].type === 'buy') {
-                total -= rows[i].value * rows[i].amount;
-            } else {
-                total += rows[i].value * rows[i].amount;
-            }
-
-        }
-
-        console.log('Total İşlem Karı: ' + total + '$');
-
-        forecast();
-        setInterval(forecast, intervalSecond * 1000);
-    });
+    forecast();
+    setInterval(forecast, intervalSecond * 1000);
 
 
 }
 
-var buyNow = function (resource, ask, t) {
-    bot.sendMessage(22353916, ask + '$ değerinde ' + resource.amount + ' ETH Satın Aldım '+ resource.owner);
+var buyNow = function (resource, ask) {
 
-    /*var chart_url = t.chart();
-    bot.sendPhoto(22353916, chart_url);*/
+    client.api.buy_sell('buy', resource.amount, 'ETH/USD', function (result) {
+        if (result.error !== undefined) {
+            console.log('ERROR');
+        } else {
+
+            bot.sendMessage(22353916, ask + '$ değerinde ' + resource.amount + ' ETH Satın Aldım ' + resource.owner);
 
 
-    db.query("UPDATE resources SET ? WHERE ?", [
-        {
-            ask: ask,
-            bid: null,
-            timestamp: +new Date(),
-            idle_count: 0
+            db.query("UPDATE resources SET ? WHERE ?", [
+                {
+                    ask: ask,
+                    bid: null,
+                    timestamp: +new Date(),
+                    idle_count: 0
 
-        },
-        {
-            id: resource.id
+                },
+                {
+                    id: resource.id
+                }
+            ], function () {
+                db.query("INSERT INTO market_logs SET ?", {
+                    type: 'buy',
+                    value: ask,
+                    amount: resource.amount,
+                    order_id: result.id,
+                    timestamp: result.timestamp
+                });
+            });
         }
-    ], function () {
-        db.query("INSERT INTO market_logs SET ?", {
-            type: 'buy',
-            value: ask,
-            amount: resource.amount,
-            timestamp: +new Date()
-        });
     });
-
 
 }
 
 
-var sellNow = function (resource, bid, t) {
-    bot.sendMessage(22353916, bid + '$ değerinde ' + resource.amount + ' ETH Sattım'+ resource.owner);
+var sellNow = function (resource, bid) {
 
-    /*var chart_url = t.chart();
-    bot.sendPhoto(22353916, chart_url);*/
+    client.api.buy_sell('sell', resource.amount, 'ETH/USD', function (result) {
+        if(result.error !== undefined){
+            console.log('ERROR');
+        }else{
+
+            bot.sendMessage(22353916, bid + '$ değerinde ' + resource.amount + ' ETH Sattım '+ resource.owner);
 
 
-    db.query("UPDATE resources SET ?  WHERE ?", [
-        {
-            ask: null,
-            bid: bid,
-            timestamp: +new Date(),
-            idle_count: 0
+            db.query("UPDATE resources SET ?  WHERE ?", [
+                {
+                    ask: null,
+                    bid: bid,
+                    timestamp: +new Date(),
+                    idle_count: 0
 
-        },
-        {
-            id: resource.id
+                },
+                {
+                    id: resource.id
+                }
+            ], function () {
+                db.query("INSERT INTO market_logs SET ?", {
+                    type: 'sell',
+                    value: bid,
+                    amount: resource.amount,
+                    order_id: result.id,
+                    timestamp: result.timestamp
+                });
+            });
+
         }
-    ], function () {
-        db.query("INSERT INTO market_logs SET ?", {
-            type: 'sell',
-            value: bid,
-            amount: resource.amount,
-            timestamp: +new Date()
-        });
     });
 
 

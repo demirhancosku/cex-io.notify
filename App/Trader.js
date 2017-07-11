@@ -242,10 +242,10 @@ var init = function (client, chatBot) {
 }
 
 var buyNow = function (resource, ask, t) {
-    bot.sendMessage(22353916, ask + '$ değerinde ' + resource.amount + ' ETH Satın Aldım');
+    bot.sendMessage(22353916, ask + '$ değerinde ' + resource.amount + ' ETH Satın Aldım '+ resource.owner);
 
-    var chart_url = t.chart();
-    bot.sendPhoto(22353916, chart_url);
+    /*var chart_url = t.chart();
+    bot.sendPhoto(22353916, chart_url);*/
 
 
     db.query("UPDATE resources SET ? WHERE ?", [
@@ -273,10 +273,10 @@ var buyNow = function (resource, ask, t) {
 
 
 var sellNow = function (resource, bid, t) {
-    bot.sendMessage(22353916, bid + '$ değerinde ' + resource.amount + ' ETH Sattım');
+    bot.sendMessage(22353916, bid + '$ değerinde ' + resource.amount + ' ETH Sattım'+ resource.owner);
 
-    var chart_url = t.chart();
-    bot.sendPhoto(22353916, chart_url);
+    /*var chart_url = t.chart();
+    bot.sendPhoto(22353916, chart_url);*/
 
 
     db.query("UPDATE resources SET ?  WHERE ?", [

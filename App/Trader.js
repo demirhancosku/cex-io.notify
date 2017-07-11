@@ -117,7 +117,7 @@ var forecast = function () {
 
                     //if (lastAskPrice < tAsk.mean()) {
                         //if (askForecast > lastForecastAsk  /*lastAskPrice*/) {
-                        if (util.deepPromise(smoothedAsk, 17)) {
+                        if (util.deepPromise(smoothedAsk, 27)) {
 
 
                             if ((parseFloat(resource.bid) - parseFloat(resource.buy_margin)) > (lastAskPrice)) {
@@ -164,7 +164,7 @@ var forecast = function () {
                     //if (lastBidPrices[lastBidPrices.length - 1][1] > tBid.mean()) {
 
                         //if (parseFloat(bidForecast) < lastForecastBid /*lastBidPrices[lastBidPrices.length - 1][1]*/) {
-                        if (util.deepPromise(smoothedAsk, 17)) {
+                        if (util.deepPromise(smoothedAsk, 27)) {
 
 
                             if ((parseFloat(resource.ask) + parseFloat(resource.sell_margin) ) < parseFloat(lastBidPrices[lastBidPrices.length - 1][1])) {

@@ -138,6 +138,14 @@ function place_order(type, amount, price, couple, callback)
     api_call('place_order', param, 1, couple, callback)
 }
 
+function buy_sell(type, amount, couple, callback)
+{
+    param = new Object();
+    param.type = type;
+    param.order_type = 'market';
+    param.amount = amount;
+    api_call('place_order', param, 1, couple, callback)
+}
 
 
 function convert(amount, couple, callback)
@@ -157,3 +165,4 @@ exports.open_orders = open_orders;
 exports.cancel_order = cancel_order;
 exports.place_order = place_order;
 exports.convert = convert;
+exports.buy_sell = buy_sell;

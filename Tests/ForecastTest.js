@@ -26,20 +26,27 @@ var resource = {
     'ask': 200,
     'bid': null,
     'amount': 0.1,
-    'buy_margin': 0.5,
-    'sell_margin': 0.5,
-    'forecast_count': 120,
-    'mean_count': 800,
-    'smooth_period': 100,
-    'trend_alpha': 0.7,
-    'degree': 30
+    'sell_margin': 0.1,
+    'buy_margin': 0.1,
+    'forecast_count': 25,
+    'mean_count': 500,
+    'smooth_period': 300,
+    'trend_alpha': 0.5,
+    'degree': 10
 };
 
-var dayCount = 5;
+var dayCount = 1.5;
+var startDate = 1499522400000;
 
-var profit = -27;
+var profit = 0;
+if(resource.bid === null){
+    profit = -resource.ask * resource.amount;
+}else{
+    profit = +resource.bid * resource.amount
+}
 
 var startPriceIndex = 0;
+
 var delayWindow = 10;
 
 var trades = {
@@ -119,13 +126,12 @@ var windowDivider = function (rowsSalt, means) {
 
         var lastForecastAsk = smoothedAsk.data[smoothedAsk.data.length - 1][1];
 
-        console.log('last:'+ lastAskPrice + ' forecast: '+ askForecast +'-' + lastForecastAsk + ' mean:' +tAsk.mean());
+        //console.log('last:'+ lastAskPrice + ' forecast: '+ askForecast +'-' + lastForecastAsk + ' mean:' +tAsk.mean());
 
-        if (lastAskPrice < tAsk.mean()) {
-            if (askForecast > lastForecastAsk) {
+            if (util.deepPromise(smoothedAsk,17)) {
 
+                if ((parseFloat(resource.bid) - parseFloat(resource.buy_margin) ) > parseFloat(lastBidPrices[lastBidPrices.length - 1][1])) {
 
-                if ((parseFloat(resource.bid) - parseFloat(resource.buy_margin)) > (lastAskPrice)) {
                     console.log(resource.owner + ' buy at ' + lastAskPrice);
 
                     buyNow(lastAskPrices[lastAskPrices.length - 1]);
@@ -135,7 +141,6 @@ var windowDivider = function (rowsSalt, means) {
 
             }
 
-        }
 
     }
 
@@ -144,11 +149,10 @@ var windowDivider = function (rowsSalt, means) {
 
         var lastForecastBid = smoothedBid.data[smoothedBid.data.length - 1][1];
 
-        console.log('last:'+ lastBidPrices[lastBidPrices.length - 1][1] + ' forecast: '+ bidForecast +'-' + lastForecastBid + ' mean:' +tBid.mean());
+        //console.log('last:'+ lastBidPrices[lastBidPrices.length - 1][1] + ' forecast: '+ bidForecast +'-' + lastForecastBid + ' mean:' +tBid.mean());
 
-        if (lastBidPrices[lastBidPrices.length - 1][1] > tBid.mean()) {
 
-            if (parseFloat(bidForecast) < lastForecastBid) {
+            if (util.peakPromise(smoothedAsk,17)) {
 
 
                 if ((parseFloat(resource.ask) + parseFloat(resource.sell_margin) ) < parseFloat(lastBidPrices[lastBidPrices.length - 1][1])) {
@@ -159,8 +163,6 @@ var windowDivider = function (rowsSalt, means) {
                 }
 
             }
-
-        }
 
 
     }
@@ -206,7 +208,7 @@ var windowDivider = function (rowsSalt, means) {
 
 
 
-        create_chart(chartTBid.reset().data, chartTBid.data, chartTask.reset().data, chartTask.data, trades.buy, trades.sell, means);
+        create_chart(chartTBid.data,chartTBid.reset().data, chartTask.data,chartTask.reset().data,trades.buy, trades.sell, means,lastBidPrices[lastBidPrices.length - 1][1]);
 
     }
 
@@ -214,27 +216,26 @@ var windowDivider = function (rowsSalt, means) {
 }
 
 
-var lookUp = function (lookUpRange) {
+var lookUp = function (start,lookUpRange) {
 
-    console.log(colors.silly('Start Timestamp: ' + lookUpRange + ' Day Count: ' + dayCount));
+    console.log(colors.silly('Timestamp Between ' + lookUpRange + ' - '+start+ ' Day Count: ' + dayCount));
 
     var means = [];
     db.query('SELECT * FROM prices WHERE timestamp > ' + lookUpRange + ' ORDER BY id LIMIT 1', function (err, rowControl) {
 
-        db.query('SELECT * FROM prices WHERE id > ' + (rowControl[0].id - resource.mean_count + 1 ) + ' ORDER BY id ASC', function (err, rowsSalt) {
+        db.query('SELECT * FROM prices WHERE id > ' + (rowControl[0].id - resource.mean_count) + ' AND timestamp < '+start+' ORDER BY id ASC', function (err, rowsSalt) {
 
-            console.log(colors.red('Controlled data point amount: ' + rowsSalt.length));
+            console.log(colors.red('Controlled data point amount: ' + rowsSalt.length + ' Actual Size:' + (rowsSalt.length - resource.mean_count)));
             console.log(colors.red('Start Point at : ' + resource.mean_count));
             windowDivider(rowsSalt, means);
         });
-
     });
 
 
 }
 
 
-var create_chart = function (bid, bidSmooth, ask, askSmooth, fAsk, fBid, means) {
+var create_chart = function (bidSmooth,bid, askSmooth,ask, fAsk, fBid, means,lastbid) {
 
     console.log('Ask Count:' + ask.length);
     console.log('Bid Count:' + bid.length);
@@ -248,17 +249,30 @@ var create_chart = function (bid, bidSmooth, ask, askSmooth, fAsk, fBid, means) 
 
     console.log('Mean Count:' + means.length);
 
+
+    if(resource.ask !== null){
+        profit += lastbid * resource.amount;
+    }
+
     console.log('NET Profit' + profit);
 
 
 
-    var chartNode = new ChartjsNode(6000, 800);
+    var chartNode = new ChartjsNode(5000*dayCount, 800);
 
     var defaultOptions = {
         plugins: {},
         title: {
             display: true,
-            text: resource.owner + ' Algoritma Tahmin Grafiği'
+            text: resource.owner + ' Algoritma Tahmin Grafiği'+
+            ' Profit: ' + profit +
+            ' Mean Count: ' + resource.mean_count +
+            ' Trend Alpha: ' + resource.trend_alpha +
+            ' Degree: '+ resource.degree +
+            ' Smooth: '+ resource.smooth_period +
+            ' Forecast Count: '+ resource.forecast_count +
+            ' Sell Margin: '+ resource.sell_margin +
+            ' Buy Margin: '+ resource.buy_margin
         },
         backgroundColor: "#ffffff"
     }
@@ -271,55 +285,41 @@ var create_chart = function (bid, bidSmooth, ask, askSmooth, fAsk, fBid, means) 
                     label: 'Satış Değerleri',
                     data: getYAxisForChart(bid),
                     type: 'line',
-                    backgroundColor: "#36a2eb",
+                    backgroundColor: "#00eb19",
                     fill: false
                 },
-                /*{
+                {
                     label: 'Satış Değerleri Smooth',
                     data: getYAxisForChart(bidSmooth),
                     type: 'line',
-                    backgroundColor: "#911192",
+                    backgroundColor: "#00800f",
                     fill: false
-                },*/
+                },
                 {
                     label: 'Alış Değerleri',
                     data: getYAxisForChart(ask),
                     type: 'line',
-                    backgroundColor: "#61f661",
-                    fill: false
-                },
-                /*{
-                    label: 'Alış Değerleri Smooth',
-                    data: getYAxisForChart(askSmooth),
-                    type: 'line',
-                    backgroundColor: "#a9234c",
-                    fill: false
-                },
-               {
-                    label: 'Alış Değerleri Mean',
-                    data: getMeanYAxisForChart(means, 'ask'),
-                    type: 'line',
-                    backgroundColor: "#9ff99f",
+                    backgroundColor: "#f60f00",
                     fill: false
                 },
                 {
-                    label: 'Satış Değerleri Mean',
-                    data: getMeanYAxisForChart(means, 'bid'),
+                    label: 'Alış Değerleri Smooth',
+                    data: getYAxisForChart(askSmooth),
                     type: 'line',
-                    backgroundColor: "#a2d4f6",
+                    backgroundColor: "#830700",
                     fill: false
-                },*/
+                },
                 {
                     label: 'Alış Tahminleri',
                     data: fAsk,
                     type: 'bubble',
-                    backgroundColor: "#cc65fe"
+                    backgroundColor: "#ff0003"
                 },
                 {
                     label: 'Satış Tahminleri',
                     data: fBid,
                     type: 'bubble',
-                    backgroundColor: "#ffce56"
+                    backgroundColor: "#22ff00"
                 }
             ],
             labels: getXAxisForChart(bid)
@@ -339,7 +339,8 @@ var create_chart = function (bid, bidSmooth, ask, askSmooth, fAsk, fBid, means) 
             return chartNode.getImageStream('image/png');
         }).then(function (streamResult) {
             console.log('Test Result Chart Created');
-            return chartNode.writeImageToFile('image/png', '../test-results/test-resource-' + resource.id + '-forecast-test-1-.png');
+            return chartNode.writeImageToFile('image/png', '../test-results/test-'+Math.floor(Math.random() * 10) + 1+'.png');
+
         });
 }
 
@@ -349,7 +350,7 @@ var getXAxisForChart = function (data) {
 
     for (i in data) {
         var rawDate = new Date(data[i][0]);
-        var date = rawDate.getHours() + ':' + rawDate.getMinutes() + ' ' + rawDate.getDate();
+        var date = rawDate.getHours() + ':' + rawDate.getMinutes() + ':' + rawDate.getSeconds()+  ' ' + rawDate.getDate();
         container.push(date);
     }
 
@@ -380,12 +381,12 @@ var getMeanYAxisForChart = function (data, key) {
 var buyNow = function (ask) {
 
     var rawDate = new Date(ask[0]);
-    var xDate = rawDate.getHours() + ':' + rawDate.getMinutes() + ' ' + rawDate.getDate();
+    var xDate = rawDate.getHours() + ':' + rawDate.getMinutes() + ':' + rawDate.getSeconds()+  ' ' + rawDate.getDate();
 
     profit -= ask[1] * resource.amount;
 
     trades.buy.push({
-        r: 12,
+        r: 15,
         y: ask[1],
         x: xDate
     });
@@ -399,12 +400,12 @@ var buyNow = function (ask) {
 var sellNow = function (bid) {
 
     var rawDate = new Date(bid[0]);
-    var xDate = rawDate.getHours() + ':' + rawDate.getMinutes() + ' ' + rawDate.getDate();
+    var xDate = rawDate.getHours() + ':' + rawDate.getMinutes()  + ':' + rawDate.getSeconds()+ ' ' + rawDate.getDate();
 
     profit += bid[1] * resource.amount;
 
     trades.sell.push({
-        r: 12,
+        r: 15,
         y: bid[1],
         x: xDate
     });
@@ -416,9 +417,14 @@ var sellNow = function (bid) {
 
 module.exports = {
     init: function () {
-        var d = new Date();
+        if(startDate === null){
+            var d = new Date();
+        }else{
+            var d = new Date(startDate);
+        }
+
         var time = d.getTime();
         var lookUpRange = time - (dayCount * 24 * 60 * 60 * 1000);
-        lookUp(Math.round(lookUpRange / 1000));
+        lookUp(Math.round(time/1000), Math.round(lookUpRange/1000));
     }
 }

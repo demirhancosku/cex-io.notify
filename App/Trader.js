@@ -4,6 +4,7 @@
 
 var colors = require('colors/safe');
 var https = require("https");
+var util = require('../Utils/TradeUtil.js');
 
 colors.setTheme({
     silly: 'rainbow',
@@ -27,7 +28,7 @@ var debug = config.debug;//TODO: Take this to the config file
 var bot = {};
 
 var forecast = function () {
-    db.query('SELECT * FROM resources', function (err, resources) {
+    db.query('SELECT * FROM resources WHERE id < 9', function (err, resources) {
 
         db.query('SELECT * FROM prices ORDER BY id DESC LIMIT 10000', function (err, rowsSalt) {
 
@@ -42,7 +43,7 @@ var forecast = function () {
                 var resource = resources[r];
 
                 var lastAskPrices = [], lastBidPrices = [];
-                var rows  = rowsSalt.slice(0,resource.mean_count).reverse();
+                var rows = rowsSalt.slice(0, resource.mean_count).reverse();
 
                 for (i in rows) {
                     lastAskPrices.push([new Date(rows[i].timestamp * 1000), parseFloat(rows[i].ask)]);
@@ -53,7 +54,7 @@ var forecast = function () {
 
                 var tAsk = new timeseries.main(lastAskPrices);
 
-                console.log(colors.silly(resource.owner + ' Price Count: ') + colors.red('$'+tAsk.data.length));
+                console.log(colors.silly(resource.owner + ' Price Count: ') + colors.red('$' + tAsk.data.length));
 
                 var smoothedAsk = tAsk.smoother({period: resource.smooth_period}).dsp_itrend({
                     alpha: resource.trend_alpha
@@ -101,10 +102,10 @@ var forecast = function () {
 
                     if (debug) {
 
-                        var buyState =  'none';
-                        if(parseFloat(askForecast) < lastForecastAsk){
+                        var buyState = 'none';
+                        if (parseFloat(askForecast) < lastForecastAsk) {
                             buyState = 'down';
-                        }else if(parseFloat(askForecast) > lastForecastAsk){
+                        } else if (parseFloat(askForecast) > lastForecastAsk) {
                             buyState = 'up';
                         }
 
@@ -114,8 +115,9 @@ var forecast = function () {
                     }
 
 
-                    if (lastAskPrice < tAsk.mean()) {
-                        if (askForecast > lastForecastAsk  /*lastAskPrice*/) {
+                    //if (lastAskPrice < tAsk.mean()) {
+                        //if (askForecast > lastForecastAsk  /*lastAskPrice*/) {
+                        if (util.deepPromise(smoothedAsk, 17)) {
 
 
                             if ((parseFloat(resource.bid) - parseFloat(resource.buy_margin)) > (lastAskPrice)) {
@@ -127,7 +129,7 @@ var forecast = function () {
 
                         }
 
-                    }
+                    //}
 
                     if (debug) {
                         console.log(colors.buy('For ' + resource.owner + ' Selled at ') + colors.red('$' + +resource.bid) + colors.buy('. Expected Purchase Value: ') + colors.red('$' + (parseFloat(resource.bid) - parseFloat(resource.buy_margin))));
@@ -147,21 +149,22 @@ var forecast = function () {
 
                     if (debug) {
 
-                        var sellState =  'none';
-                        if(parseFloat(bidForecast) < lastForecastBid){
+                        var sellState = 'none';
+                        if (parseFloat(bidForecast) < lastForecastBid) {
                             sellState = 'down';
-                        }else if(parseFloat(bidForecast) > lastForecastBid){
+                        } else if (parseFloat(bidForecast) > lastForecastBid) {
                             sellState = 'up';
                         }
 
-                        console.log(colors.sell(resource.owner + ' Forecasted Sell Price: ') + colors.forecast('$' + (parseFloat(bidForecast))) + colors.sell(' State:') + colors.blue(sellState) );
-                        console.log(colors.sell(resource.owner + ' Previous Forecasted Sell: ') + colors.forecast('$' +lastForecastBid));
+                        console.log(colors.sell(resource.owner + ' Forecasted Sell Price: ') + colors.forecast('$' + (parseFloat(bidForecast))) + colors.sell(' State:') + colors.blue(sellState));
+                        console.log(colors.sell(resource.owner + ' Previous Forecasted Sell: ') + colors.forecast('$' + lastForecastBid));
                         console.log(colors.sell(resource.owner + ' Sell Price Mean: ') + colors.red('$' + tBid.mean()));
                     }
 
-                    if (lastBidPrices[lastBidPrices.length - 1][1] > tBid.mean()) {
+                    //if (lastBidPrices[lastBidPrices.length - 1][1] > tBid.mean()) {
 
-                        if (parseFloat(bidForecast) < lastForecastBid /*lastBidPrices[lastBidPrices.length - 1][1]*/) {
+                        //if (parseFloat(bidForecast) < lastForecastBid /*lastBidPrices[lastBidPrices.length - 1][1]*/) {
+                        if (util.deepPromise(smoothedAsk, 17)) {
 
 
                             if ((parseFloat(resource.ask) + parseFloat(resource.sell_margin) ) < parseFloat(lastBidPrices[lastBidPrices.length - 1][1])) {
@@ -172,7 +175,7 @@ var forecast = function () {
 
                         }
 
-                    }
+                    //}
 
                     if (debug) {
                         console.log(colors.sell('For ' + resource.owner + ' Purchased at ') + colors.red('$' + +resource.ask) + colors.sell(' Expected Sell Value: ') + colors.red('$' + ( parseFloat(resource.ask) + parseFloat(resource.sell_margin))));

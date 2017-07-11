@@ -7,17 +7,25 @@ var timeseries = require("timeseries-analysis");
 
 module.exports = {
     peakPromise : function (smoothedTimeSerie,degree) {
-        var datas = smoothedTimeSerie.data.slice(- degree);
+        var datas = smoothedTimeSerie.smoother({period:degree}).data.slice(- degree);
         var selectedArea = new timeseries.main(datas);
         var raw_values = selectedArea.data;
 
 
         //var min = selectedArea.min();
         var max = selectedArea.max();
+        var key;
 
-        //var deviation = selectedArea.stdev();
+        //console.log(raw_values);
+        for(m in raw_values){
+            if(raw_values[m][1] === max){
+                key = parseInt(m);
+            }
+        }
 
-        if(raw_values[Math.ceil(degree/2)+1][1] === max){
+        //console.log((parseInt(Math.ceil(degree/2))-1) - parseInt(degree/6) , (parseInt(Math.ceil(degree/2))-1) + parseInt(degree/6),key);
+
+        if((parseInt(Math.ceil(degree/2))-1) - parseInt(degree/6) < key && (parseInt(Math.ceil(degree/2))-1) + parseInt(degree/6) > key ){
             return true;
         }else{
             return false;
@@ -26,17 +34,20 @@ module.exports = {
     },
     deepPromise : function (smoothedTimeSerie,degree) {
 
-        var datas = smoothedTimeSerie.data.slice(- degree);
+        var datas = smoothedTimeSerie.smoother({period:degree}).data.slice(- degree);
         var selectedArea = new timeseries.main(datas);
         var raw_values = selectedArea.data;
 
-
         var min = selectedArea.min();
-        //var max = selectedArea.max();
+        var key;
 
-        //var deviation = selectedArea.stdev();
+        for(m in raw_values){
+            if(raw_values[m][1] === min){
+                key = m;
+            }
+        }
 
-        if(raw_values[Math.ceil(degree/2)+1][1] === min){
+        if((parseInt(Math.ceil(degree/2))-1) - parseInt(degree/6) < key && (parseInt(Math.ceil(degree/2))-1) + parseInt(degree/6) > key ){
             return true;
         }else{
             return false;

@@ -120,7 +120,8 @@ var forecast = function () {
 
                     //if (lastAskPrice < tAsk.mean()) {
                         //if (askForecast > lastForecastAsk  /*lastAskPrice*/) {
-                        if (util.deepPromise(smoothedAsk,15)) {
+                    var promiseResultAsk = util.deepPromise(smoothedAsk,21)
+                     if (promiseResultAsk) {
 
 
 
@@ -141,7 +142,7 @@ var forecast = function () {
 
                     if (debug) {
                         console.log(colors.buy('For ' + resource.owner + ' Selled at ') + colors.red('$' + +resource.bid) + colors.buy('. Expected Purchase Value: ') + colors.red('$' + (parseFloat(resource.bid) - parseFloat(resource.buy_margin))));
-                        console.log(colors.buy('Is suitable: ' + suitableForAsk));
+                        console.log(colors.buy('Is suitable: ' + suitableForAsk+' Promise Result: ' + promiseResultAsk));
                     }
 
                     if (!suitableForAsk) {
@@ -172,7 +173,8 @@ var forecast = function () {
                     //if (lastBidPrices[lastBidPrices.length - 1][1] > tBid.mean()) {
 
                         //if (parseFloat(bidForecast) < lastForecastBid /*lastBidPrices[lastBidPrices.length - 1][1]*/) {
-                        if (util.peakPromise(smoothedAsk, 15)) {
+                        var promiseResultBid = util.peakPromise(smoothedBid, 21);
+                        if (promiseResultBid) {
 
 
                             if ((parseFloat(resource.ask) + parseFloat(resource.sell_margin) ) < parseFloat(lastBidPrices[lastBidPrices.length - 1][1])) {
@@ -190,8 +192,9 @@ var forecast = function () {
                     //}
 
                     if (debug) {
+
                         console.log(colors.sell('For ' + resource.owner + ' Purchased at ') + colors.red('$' + +resource.ask) + colors.sell(' Expected Sell Value: ') + colors.red('$' + ( parseFloat(resource.ask) + parseFloat(resource.sell_margin))));
-                        console.log(colors.sell('Is suitable: ' + suitableForBid));
+                        console.log(colors.sell('Is suitable: ' + suitableForBid +' Promise Result: ' + promiseResultBid));
 
                     }
 

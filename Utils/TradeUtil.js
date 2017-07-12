@@ -53,5 +53,8 @@ module.exports = {
             return false;
         }
 
+    },
+    sliceByMeanCount : function(arr,mean_count){
+        return arr.slice(0, mean_count).reverse();
     }
 }

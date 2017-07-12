@@ -48,7 +48,7 @@ var forecast = function () {
                 var resource = resources[r];
 
                 var lastAskPrices = [], lastBidPrices = [];
-                var rows = rowsSalt.slice(0, resource.mean_count).reverse();
+                var rows = util.sliceByMeanCount(rowsSalt,resource.mean_count);
 
                 for (i in rows) {
                     lastAskPrices.push([new Date(rows[i].timestamp * 1000), parseFloat(rows[i].ask)]);
@@ -59,6 +59,7 @@ var forecast = function () {
 
                 var tAsk = new timeseries.main(lastAskPrices);
 
+                if(debug)
                 console.log(colors.silly(resource.owner + ' Price Count: ') + colors.red('$' + tAsk.data.length));
 
                 var smoothedAsk = tAsk.smoother({period: resource.smooth_period}).dsp_itrend({
@@ -96,7 +97,7 @@ var forecast = function () {
                     bidForecast -= tBid.data[tBid.data.length - 1 - k][1] * Bidcoeffs[k];
                 }
 
-                if (debug)
+                if(debug)
                 console.log(colors.debug(resource.owner + ' processed in the last ') + colors.red(Math.floor(( (smoothedAsk.data[smoothedAsk.data.length - 1][0] - smoothedAsk.data[0][0]) / 1000) / 60) + ' munites.') + colors.debug(' Mean count: ') + colors.red(smoothedAsk.data.length))
 
                 var suitableForAsk = false;
@@ -122,9 +123,9 @@ var forecast = function () {
 
                     //if (lastAskPrice < tAsk.mean()) {
                         //if (askForecast > lastForecastAsk  /*lastAskPrice*/) {
-                    var promiseResultAsk = util.deepPromise(smoothedAsk,promiseCount)
-                     if (promiseResultAsk) {
+                    var promiseResultAsk = util.deepPromise(smoothedAsk,promiseCount);
 
+                     if (promiseResultAsk) {
 
 
                             if ((parseFloat(resource.bid) - parseFloat(resource.buy_margin)) > (lastAskPrice)) {
@@ -176,8 +177,8 @@ var forecast = function () {
 
                         //if (parseFloat(bidForecast) < lastForecastBid /*lastBidPrices[lastBidPrices.length - 1][1]*/) {
                         var promiseResultBid = util.peakPromise(smoothedBid, promiseCount);
-                        if (promiseResultBid) {
 
+                        if (promiseResultBid) {
 
                             if ((parseFloat(resource.ask) + parseFloat(resource.sell_margin) ) < parseFloat(lastBidPrices[lastBidPrices.length - 1][1])) {
 
@@ -235,14 +236,19 @@ var init = function (clnt, chatBot) {
 
 var buyNow = function (resource, ask) {
 
+    var buyPrice = (resource.amount * ask) + 0.05;
+
+    console.log('buy', buyPrice.toFixed(2), 'ETH/USD');
     client.api.buy_sell('buy', resource.amount, 'ETH/USD', function (result) {
         if (result.error !== undefined) {
             console.log('ERROR');
             console.log(result);
 
+            bot.sendMessage(22353916, + resource.owner + ' kaynağı ile '+ask + '$ dan ' + resource.amount + ' ETH almaya çalışırken bir sorun oluştu.' );
+
         } else {
 
-            bot.sendMessage(22353916, ask + '$ değerinde ' + resource.amount + ' ETH Satın Aldım ' + resource.owner);
+            bot.sendMessage(22353916, resource.owner+' kaynağı ile '+ask + '$ değerinde ' + resource.amount + ' ETH Satın Aldım ');
 
 
             db.query("UPDATE resources SET ? WHERE ?", [
@@ -277,9 +283,12 @@ var sellNow = function (resource, bid) {
         if(result.error !== undefined){
             console.log('ERROR');
             console.log(result);
+
+            bot.sendMessage(22353916, + resource.owner + ' kaynağı ile '+bid + '$ dan ' + resource.amount + ' ETH satmaya çalışırken bir sorun oluştu.' );
+
         }else{
 
-            bot.sendMessage(22353916, bid + '$ değerinde ' + resource.amount + ' ETH Sattım '+ resource.owner);
+            bot.sendMessage(22353916, + resource.owner + ' kaynağı ile ' +bid + '$ değerinde ' + resource.amount + ' ETH Sattım ');
 
 
             db.query("UPDATE resources SET ?  WHERE ?", [
@@ -322,7 +331,7 @@ var idle = function (resource) {
     ], function () {
 
         if (resource.idle_count + 1 === 720 * 2 || resource.idle_count + 1 === 720 * 4 || resource.idle_count + 1 === 720 * 8) {
-            bot.sendMessage(22353916, resource.owner + ' parası ' + parseInt(((resource.idle_count + 1) * intervalSecond) / 60 / 60) + ' saattir işlem göremiyor.');
+            bot.sendMessage(22353916, resource.owner + ' kaynağı (ID:#'+resource.id+') ' + parseInt(((resource.idle_count + 1) * intervalSecond) / 60 / 60) + ' saattir işlem göremiyor.');
         }
     });
 }

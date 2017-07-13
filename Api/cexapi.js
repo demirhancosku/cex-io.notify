@@ -29,7 +29,7 @@ function __signature() //Generate signature
 
 function __nonce() //Get timestamp as nonce
 {
-    _nonce = Math.round(new Date().getTime() / 1000);
+    _nonce = new Date().getUTCMilliseconds();
 }
 
 function __post(url, param, callback) //Send post request via requstify

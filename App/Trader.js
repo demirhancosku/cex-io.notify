@@ -236,7 +236,7 @@ var init = function (clnt, chatBot) {
 
 var buyNow = function (resource, ask) {
 
-    var buyPrice = (resource.amount * ask) + 0.05;
+    var buyPrice = (parseFloat(resource.amount * ask) + 0.05);
 
     console.log('buy', buyPrice.toFixed(2), 'ETH/USD');
     client.api.buy_sell('buy', resource.amount, 'ETH/USD', function (result) {
@@ -244,7 +244,8 @@ var buyNow = function (resource, ask) {
             console.log('ERROR');
             console.log(result);
 
-            bot.sendMessage(22353916, + resource.owner + ' kaynağı ile '+ask + '$ dan ' + resource.amount + ' ETH almaya çalışırken bir sorun oluştu.' );
+            bot.sendMessage(22353916, resource.owner + ' kaynağı ile '+ask + '$ dan ' + resource.amount + ' ETH almaya çalışırken bir sorun oluştu.' );
+            bot.sendMessage(22353916, JSON.stringify(result) );
 
         } else {
 
@@ -284,11 +285,12 @@ var sellNow = function (resource, bid) {
             console.log('ERROR');
             console.log(result);
 
-            bot.sendMessage(22353916, + resource.owner + ' kaynağı ile '+bid + '$ dan ' + resource.amount + ' ETH satmaya çalışırken bir sorun oluştu.' );
+            bot.sendMessage(22353916, resource.owner + ' kaynağı ile '+bid + '$ dan ' + resource.amount + ' ETH satmaya çalışırken bir sorun oluştu.' );
+            bot.sendMessage(22353916, JSON.stringify(result) );
 
         }else{
 
-            bot.sendMessage(22353916, + resource.owner + ' kaynağı ile ' +bid + '$ değerinde ' + resource.amount + ' ETH Sattım ');
+            bot.sendMessage(22353916, resource.owner + ' kaynağı ile ' +bid + '$ değerinde ' + resource.amount + ' ETH Sattım ');
 
 
             db.query("UPDATE resources SET ?  WHERE ?", [

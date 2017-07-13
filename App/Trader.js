@@ -239,7 +239,7 @@ var buyNow = function (resource, ask) {
     var buyPrice = (parseFloat(resource.amount * ask) + 0.05);
 
     console.log('buy', buyPrice.toFixed(2), 'ETH/USD');
-    client.api.buy_sell('buy', resource.amount, 'ETH/USD', function (result) {
+    client.api.buy_sell('buy', buyPrice.toFixed(2), 'ETH/USD', function (result) {
         if (result.error !== undefined) {
             console.log('ERROR');
             console.log(result);

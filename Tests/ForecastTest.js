@@ -26,17 +26,17 @@ var resource = {
     'ask': 200,
     'bid': null,
     'amount': 0.1,
-    'sell_margin': 0.1,
-    'buy_margin': 0.1,
-    'forecast_count': 25,
-    'mean_count': 500,
-    'smooth_period': 300,
-    'trend_alpha': 0.5,
+    'sell_margin': 1.2,
+    'buy_margin': 0.7,
+    'forecast_count': 31,
+    'mean_count': 250,
+    'smooth_period': 40,
+    'trend_alpha': 0.4,
     'degree': 10
 };
 
-var dayCount = 1.5;
-var startDate = 1499522400000;
+var dayCount = 10;
+var startDate = null;
 
 var profit = 0;
 if(resource.bid === null){
@@ -47,7 +47,7 @@ if(resource.bid === null){
 
 var startPriceIndex = 0;
 
-var delayWindow = 10;
+var delayWindow = 5;
 
 var trades = {
     'sell': [],
@@ -128,9 +128,9 @@ var windowDivider = function (rowsSalt, means) {
 
         //console.log('last:'+ lastAskPrice + ' forecast: '+ askForecast +'-' + lastForecastAsk + ' mean:' +tAsk.mean());
 
-            if (util.deepPromise(smoothedAsk,17)) {
+            if (util.deepPromise(smoothedAsk,resource.forecast_count)) {
 
-                if ((parseFloat(resource.bid) - parseFloat(resource.buy_margin) ) > parseFloat(lastBidPrices[lastBidPrices.length - 1][1])) {
+                if ((parseFloat(resource.bid) - parseFloat(resource.buy_margin) ) > parseFloat(lastAskPrice)) {
 
                     console.log(resource.owner + ' buy at ' + lastAskPrice);
 
@@ -152,7 +152,7 @@ var windowDivider = function (rowsSalt, means) {
         //console.log('last:'+ lastBidPrices[lastBidPrices.length - 1][1] + ' forecast: '+ bidForecast +'-' + lastForecastBid + ' mean:' +tBid.mean());
 
 
-            if (util.peakPromise(smoothedAsk,17)) {
+            if (util.peakPromise(smoothedAsk,resource.forecast_count)) {
 
 
                 if ((parseFloat(resource.ask) + parseFloat(resource.sell_margin) ) < parseFloat(lastBidPrices[lastBidPrices.length - 1][1])) {
@@ -384,6 +384,7 @@ var buyNow = function (ask) {
     var xDate = rawDate.getHours() + ':' + rawDate.getMinutes() + ':' + rawDate.getSeconds()+  ' ' + rawDate.getDate();
 
     profit -= ask[1] * resource.amount;
+    profit -= 0.05;
 
     trades.buy.push({
         r: 15,
@@ -403,6 +404,7 @@ var sellNow = function (bid) {
     var xDate = rawDate.getHours() + ':' + rawDate.getMinutes()  + ':' + rawDate.getSeconds()+ ' ' + rawDate.getDate();
 
     profit += bid[1] * resource.amount;
+    profit -= 0.05;
 
     trades.sell.push({
         r: 15,

@@ -263,7 +263,7 @@ var buyNow = function (resource, ask) {
 
             db.query("UPDATE resources SET ? WHERE ?", [
                 {
-                    ask: result.symbol2Amount / 100,
+                    ask: ask,
                     bid: null,
                     timestamp: +new Date(),
                     idle_count: 0
@@ -275,7 +275,7 @@ var buyNow = function (resource, ask) {
             ], function () {
                 db.query("INSERT INTO market_logs SET ?", {
                     type: 'buy',
-                    value: result.symbol2Amount / 100,
+                    value:  ask,
                     amount: result.symbol1Amount / 1000000,
                     order_id: result.id,
                     timestamp: result.time / 1000
@@ -316,7 +316,7 @@ var sellNow = function (resource, bid) {
             db.query("UPDATE resources SET ?  WHERE ?", [
                 {
                     ask: null,
-                    bid: result.symbol2Amount / 100,
+                    bid: bid,
                     timestamp: +new Date(),
                     idle_count: 0
 
@@ -327,7 +327,7 @@ var sellNow = function (resource, bid) {
             ], function () {
                 db.query("INSERT INTO market_logs SET ?", {
                     type: 'sell',
-                    value: result.symbol2Amount / 100,
+                    value: bid,
                     amount: result.symbol1Amount / 1000000,
                     order_id: result.id,
                     timestamp: result.time / 1000

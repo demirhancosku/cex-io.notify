@@ -266,6 +266,7 @@ var buyNow = function (resource, ask) {
                     ask: ask,
                     bid: null,
                     timestamp: +new Date(),
+                    amount: result.symbol1Amount / 1000000,
                     idle_count: 0
 
                 },
@@ -318,6 +319,7 @@ var sellNow = function (resource, bid) {
                     ask: null,
                     bid: bid,
                     timestamp: +new Date(),
+                    amount: 0.1,
                     idle_count: 0
 
                 },

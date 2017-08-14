@@ -319,7 +319,7 @@ var sellNow = function (resource, bid) {
                     ask: null,
                     bid: bid,
                     timestamp: +new Date(),
-                    amount: 0.1,
+                    amount: resource.amount,
                     idle_count: 0
 
                 },

@@ -1,24 +1,28 @@
 {
   "name": "cex-io.notify",
-  "version": "0.0.1",
-  "description": "",
-  "author": "Coşku Demirhan <cosku@dokuziki.com>",
+  "version": "2.0.0",
+  "description": "Hobium Architecture test application for microservices",
+  "main": "Server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "logger" : "forever start Logger.js",
+    "server" : "forever start Server.js"
+  },
   "contributors": [
     {
       "name": "Eren Yıldırım",
       "email": "mail@erenyildirim.com"
     }
   ],
+  "author": "coskudemirhan",
   "dependencies": {
-    "chart.js": "^2.6.0",
-    "chartjs-node": "^1.5.0",
+    "restify": "^5.2.0",
     "colors": "^1.1.2",
     "dblite": "^0.7.9",
     "forever": "^0.15.3",
     "mysql": "^2.14.1",
     "node-telegram-bot-api": "^0.27.1",
     "prompt": "^1.0.0",
-    "sqlite": "^2.8.0",
     "timeseries-analysis": "1.0.12",
     "underscore": "^1.8.3"
   }

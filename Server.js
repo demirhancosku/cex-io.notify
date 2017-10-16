@@ -1,21 +1,31 @@
+"use strict";
+
+const config = require('./config'),
+    routes = require('./App/Routes'),
+    restify = require('restify');
+
+
 /**
- * Created by coskudemirhan on 17/06/2017.
+ * Server
  */
+global.server = restify.createServer({
+    name: config.port
+});
 
 
-var router = require("./App/Route.js");
-
-var client = require('./App/Client.js');
-var target = require('./App/TargetControl.js');
-var trader = require('./App/Trader.js');
-
-router.init(client);
-target.init(router.bot, router.messageLimit);
-trader.init(client, router.bot);
+/**
+ * Middleware
+ */
+global.server.use(restify.plugins.acceptParser(global.server.acceptable));
+global.server.use(restify.plugins.queryParser());
+global.server.use(restify.plugins.bodyParser());
 
 
+/**
+ * Routes
+ */
+routes();
 
-
-
-
-
+global.server.listen(config.port, () => {
+    console.log("server is up");
+});

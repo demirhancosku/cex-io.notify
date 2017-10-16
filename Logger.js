@@ -1,6 +1,4 @@
-/**
- * Created by coskudemirhan on 17/06/2017.
- */
+"use strict";
 
 const db = require('./App/Db.js'),
     client = require('./App/Client.js'),

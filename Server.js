@@ -3,6 +3,7 @@
 const config = require('./config'),
     routes = require('./App/Routes'),
     schedule = require('node-schedule'),
+    trader = require('./App/Trader/Trader'),
     restify = require('restify');
 
 
@@ -36,6 +37,4 @@ global.server.listen(config.port, () => {
  *  Trade Check
  */
 //Every 10 second check
-schedule.scheduleJob('*/10 * * * * *', function () {
-
-});
+schedule.scheduleJob('*/10 * * * * *', trader);

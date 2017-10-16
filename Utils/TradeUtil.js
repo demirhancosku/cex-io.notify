@@ -54,7 +54,23 @@ module.exports = {
         }
 
     },
-    sliceByMeanCount : function(arr,mean_count){
-        return arr.slice(0, mean_count).reverse();
+    sliceByMeanCount : function(arr,resource){
+        return arr.slice(0, resource.mean_count);
+    },
+    calculateBuyPrice : function(resource,price){
+
+        //Calculating buy price
+        let buyPrice = parseFloat(resource.amount * price);
+
+        // Adding transaction fee
+        buyPrice += Math.round(price * 2 / 10) / 100;
+
+        return buyPrice.toFixed(2);
+    },
+    calculateBuyMargin : function(resource,price){
+        return resource.bid - resource.buy_margin < price;
+    },
+    calculateSellMargin : function(resource,price){
+        return resource.ask + resource.sell_margin > price;
     }
 }

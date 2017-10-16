@@ -5,8 +5,8 @@
   "main": "Server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "logger" : "forever start Logger.js",
-    "server" : "forever start Server.js"
+    "logger": "forever start Logger.js",
+    "server": "forever start Server.js"
   },
   "contributors": [
     {
@@ -25,6 +25,7 @@
     "node-telegram-bot-api": "^0.27.1",
     "prompt": "^1.0.0",
     "timeseries-analysis": "1.0.12",
+    "promise-defer": "^1.0.0",
     "underscore": "^1.8.3"
   }
 }

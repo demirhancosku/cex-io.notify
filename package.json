@@ -16,6 +16,7 @@
   ],
   "author": "coskudemirhan",
   "dependencies": {
+    "node-schedule": "^1.2.5",
     "restify": "^5.2.0",
     "colors": "^1.1.2",
     "dblite": "^0.7.9",

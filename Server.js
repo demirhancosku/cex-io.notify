@@ -2,6 +2,7 @@
 
 const config = require('./config'),
     routes = require('./App/Routes'),
+    schedule = require('node-schedule'),
     restify = require('restify');
 
 
@@ -28,4 +29,13 @@ routes();
 
 global.server.listen(config.port, () => {
     console.log("server is up");
+});
+
+
+/**
+ *  Trade Check
+ */
+//Every 10 second check
+schedule.scheduleJob('*/10 * * * * *', function () {
+
 });

@@ -1,7 +1,7 @@
 /**
  * Created by coskudemirhan on 17/06/2017.
  */
-var config = {};
+let config = {};
 
 //Your api credentials listed in https://cex.io/trade/profile#/api
 config.username = '';

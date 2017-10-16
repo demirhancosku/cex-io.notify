@@ -1,10 +1,10 @@
 /**
  * Created by coskudemirhan on 17/06/2017.
  */
-var cexapi = require("../Api/cexapi.js");
-var config = require('../config.js');
+let cexapi = require("../Api/cexapi.js");
+const config = require('../config.js');
 
-cexapi.create(config.username, config.api_key, config.api_secret);
+cexapi.init(config.username, config.api_key, config.api_secret);
 
 module.exports = {
     api : cexapi

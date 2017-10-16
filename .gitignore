@@ -68,3 +68,4 @@ config.js
 /lite.db
 /.gitignore
 /imgs/*
+package-lock.json
